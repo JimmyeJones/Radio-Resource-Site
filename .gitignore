@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# testing
+coverage/
+
+# production
+*.tsbuildinfo
+
+# env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# editor
+.vscode/
+.idea/
+
+# data and media (mounted volumes at runtime)
+data/
+media/

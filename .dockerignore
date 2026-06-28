@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+data
+media
+.git
+.gitignore
+*.md
+!README.md
+.vscode
+.idea
+.env*
