@@ -1,11 +1,13 @@
 FROM node:20-slim AS builder
 WORKDIR /app
-RUN corepack enable
 
 # Build deps for better-sqlite3
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
+
+# Pin pnpm to a version compatible with Node 20 (pnpm 11+ requires Node 22).
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile || pnpm install
