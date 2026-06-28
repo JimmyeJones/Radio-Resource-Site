@@ -1,28 +1,55 @@
 import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { BOOTSTRAP_SQL } from './bootstrap-sql';
 
 const dbPath = process.env.DATABASE_PATH ?? './data/app.db';
 
 declare global {
   // eslint-disable-next-line no-var
   var __sqlite: Database.Database | undefined;
+  // eslint-disable-next-line no-var
+  var __drizzle: BetterSQLite3Database<typeof schema> | undefined;
 }
 
-function open() {
+function open(): { raw: Database.Database; drz: BetterSQLite3Database<typeof schema> } {
+  if (globalThis.__sqlite && globalThis.__drizzle) {
+    return { raw: globalThis.__sqlite, drz: globalThis.__drizzle };
+  }
   mkdirSync(dirname(dbPath), { recursive: true });
   const sqlite = new Database(dbPath);
+  // busy_timeout must come BEFORE journal_mode so the WAL switch can wait
+  // for a peer connection instead of throwing SQLITE_BUSY immediately.
+  sqlite.pragma('busy_timeout = 10000');
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
-  sqlite.pragma('busy_timeout = 5000');
-  return sqlite;
+  sqlite.exec(BOOTSTRAP_SQL);
+  const drz = drizzle(sqlite, { schema });
+  if (process.env.NODE_ENV !== 'production') {
+    globalThis.__sqlite = sqlite;
+    globalThis.__drizzle = drz;
+  }
+  return { raw: sqlite, drz };
 }
 
-const sqlite = global.__sqlite ?? open();
-if (process.env.NODE_ENV !== 'production') global.__sqlite = sqlite;
+// Lazy proxies — the SQLite handle is opened on first use, not at module load,
+// so `next build`'s page-data collection phase never touches the file.
+export const db = new Proxy({} as BetterSQLite3Database<typeof schema>, {
+  get(_t, prop) {
+    const { drz } = open();
+    const v = (drz as unknown as Record<string | symbol, unknown>)[prop as string];
+    return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(drz) : v;
+  },
+});
 
-export const db = drizzle(sqlite, { schema });
-export const rawDb = sqlite;
+export const rawDb = new Proxy({} as Database.Database, {
+  get(_t, prop) {
+    const { raw } = open();
+    const v = (raw as unknown as Record<string | symbol, unknown>)[prop as string];
+    return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(raw) : v;
+  },
+});
+
 export { schema };

@@ -1,8 +1,8 @@
 import { migrate } from './migrate';
 
-let bootstrapped = false;
+// Kept for callers (e.g. the worker entrypoint) that want to force the DB
+// open up-front. The proxy in client.ts also bootstraps on first access, so
+// this is purely a convenience.
 export function ensureDb() {
-  if (bootstrapped) return;
   migrate();
-  bootstrapped = true;
 }

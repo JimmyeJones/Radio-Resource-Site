@@ -1,9 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Nav } from '@/components/nav';
-import { ensureDb } from '@/db/bootstrap';
-
-ensureDb();
 
 export const metadata: Metadata = {
   title: { default: 'Radio Resource Site', template: '%s · Radio Resource' },
