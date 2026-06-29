@@ -8,6 +8,8 @@ import { isYouTubeUrl, fetchInfo } from '@/server/ytdlp';
 import { enqueueJob } from '@/server/jobs/queue';
 import { randomUUID } from 'node:crypto';
 import { unlink } from 'node:fs/promises';
+import { indexVideo, removeDoc } from '@/server/search';
+import { classify } from '@/lib/topics';
 
 const addSchema = z.object({ url: z.string().url() });
 
@@ -73,6 +75,7 @@ export async function deleteVideoAction(id: string) {
     if (p) await unlink(p).catch(() => undefined);
   }
   db.delete(videos).where(eq(videos.id, id)).run();
+  removeDoc('video', id);
   revalidatePath('/library/videos');
 }
 
@@ -81,4 +84,41 @@ export async function updateProgressAction(id: string, seconds: number) {
     .set({ progressS: Math.max(0, Math.floor(seconds)), watchedAt: Math.floor(Date.now() / 1000) })
     .where(eq(videos.id, id))
     .run();
+}
+
+export async function setVideoTopicsAction(id: string, topics: string[]) {
+  const clean = Array.from(new Set(topics.map((t) => t.trim().toLowerCase()).filter(Boolean)));
+  db.update(videos)
+    .set({ topics: clean.length ? clean : ['uncategorized'] })
+    .where(eq(videos.id, id))
+    .run();
+  indexVideo(id);
+  revalidatePath(`/library/videos/${id}`);
+  revalidatePath('/library/videos');
+}
+
+export async function toggleWatchLaterAction(id: string) {
+  const v = db.select().from(videos).where(eq(videos.id, id)).get();
+  if (!v) return { ok: false, error: 'Not found' };
+  db.update(videos).set({ watchLater: !v.watchLater }).where(eq(videos.id, id)).run();
+  revalidatePath('/library/videos');
+  revalidatePath('/library/queue');
+  revalidatePath('/');
+  return { ok: true, watchLater: !v.watchLater };
+}
+
+/** Re-run keyword classification over all videos that are still uncategorized. */
+export async function backfillTopicsAction() {
+  const all = db.select().from(videos).all();
+  let updated = 0;
+  for (const v of all) {
+    const current = v.topics ?? [];
+    if (current.length && !current.includes('uncategorized')) continue;
+    const topics = classify(v.title, v.description, v.channel);
+    db.update(videos).set({ topics }).where(eq(videos.id, v.id)).run();
+    indexVideo(v.id);
+    updated++;
+  }
+  revalidatePath('/library/videos');
+  return { ok: true, updated };
 }

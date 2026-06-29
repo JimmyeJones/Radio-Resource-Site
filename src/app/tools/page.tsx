@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines } from 'lucide-react';
+import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal } from 'lucide-react';
 
 const TOOLS = [
   {
@@ -9,6 +9,24 @@ const TOOLS = [
     title: 'US Amateur Band Plan',
     description: 'Browse 160 m through 23 cm with mode and license-class detail.',
     Icon: Radio,
+  },
+  {
+    href: '/tools/antenna',
+    title: 'Antenna & Feed Calculator',
+    description: 'Dipole/vertical lengths, dish gain & geometry, waveguide cutoff, coax loss.',
+    Icon: Antenna,
+  },
+  {
+    href: '/tools/pcb',
+    title: 'PCB Calculator',
+    description: 'IPC-2221 trace current, microstrip/stripline impedance, via capacity.',
+    Icon: CircuitBoard,
+  },
+  {
+    href: '/tools/link-budget',
+    title: 'RF Link Budget',
+    description: 'Path loss, link budget, dBm/watt and VSWR/return-loss conversions.',
+    Icon: Signal,
   },
   {
     href: '/tools/q-codes',

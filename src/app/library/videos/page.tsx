@@ -1,11 +1,10 @@
-import Link from 'next/link';
 import { db } from '@/db/client';
 import { videos, channels } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 import { PageHeader } from '@/components/page-header';
 import { AddVideoForm } from '@/components/add-video-form';
 import { JobFeed } from '@/components/job-feed';
-import { formatDuration, formatDate } from '@/lib/format';
+import { VideoLibrary } from '@/components/video-library';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Rss } from 'lucide-react';
@@ -48,42 +47,7 @@ export default function VideosPage() {
           <p>No videos yet. Paste a YouTube URL above to get started.</p>
         </Card>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((v) => (
-            <li key={v.id}>
-              <Link
-                href={`/library/videos/${v.id}`}
-                className="group block overflow-hidden rounded-xl border border-border bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <div className="relative aspect-video w-full bg-elevated">
-                  {v.thumbnailPath ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={`/api/thumb/${v.id}`}
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : null}
-                  {v.durationS ? (
-                    <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 font-mono text-xs text-white">
-                      {formatDuration(v.durationS)}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="p-3">
-                  <h3 className="line-clamp-2 font-medium leading-snug group-hover:text-accent">
-                    {v.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-muted">
-                    {v.channel ?? 'Unknown channel'}{' '}
-                    {v.publishedAt ? `· ${formatDate(v.publishedAt)}` : ''}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <VideoLibrary videos={list} />
       )}
     </div>
   );

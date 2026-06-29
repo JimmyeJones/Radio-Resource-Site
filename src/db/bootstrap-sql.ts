@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS videos (
   thumbnail_path TEXT,
   subs_path TEXT,
   info_json_path TEXT,
+  topics TEXT NOT NULL DEFAULT '[]',
+  watch_later INTEGER NOT NULL DEFAULT 0,
   added_at INTEGER NOT NULL DEFAULT (unixepoch()),
   watched_at INTEGER,
   progress_s INTEGER NOT NULL DEFAULT 0,
@@ -86,7 +88,8 @@ CREATE TABLE IF NOT EXISTS settings (
   download_format_code TEXT NOT NULL DEFAULT 'bv*+ba/b',
   max_height INTEGER NOT NULL DEFAULT 1080,
   default_subs_lang TEXT NOT NULL DEFAULT 'en',
-  mirror_article_images INTEGER NOT NULL DEFAULT 0
+  mirror_article_images INTEGER NOT NULL DEFAULT 0,
+  setup_complete INTEGER NOT NULL DEFAULT 0
 );
 
 INSERT OR IGNORE INTO settings (id) VALUES (1);

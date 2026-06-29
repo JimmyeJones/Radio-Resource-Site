@@ -5,12 +5,17 @@ import { eq } from 'drizzle-orm';
 import { VideoPlayer } from '@/components/player/video-player';
 import { formatDate, formatDuration } from '@/lib/format';
 import { DeleteVideoButton } from '@/components/delete-video-button';
+import { TopicEditor } from '@/components/topic-editor';
+import { WatchLaterButton } from '@/components/watch-later-button';
+import { AddToProject } from '@/components/add-to-project';
+import { listProjectsLite } from '@/server/actions/projects';
 
 export const dynamic = 'force-dynamic';
 
-export default function VideoPage({ params }: { params: { id: string } }) {
+export default async function VideoPage({ params }: { params: { id: string } }) {
   const v = db.select().from(videos).where(eq(videos.id, params.id)).get();
   if (!v) notFound();
+  const projects = await listProjectsLite();
 
   return (
     <article>
@@ -30,8 +35,16 @@ export default function VideoPage({ params }: { params: { id: string } }) {
             {v.durationS ? ` · ${formatDuration(v.durationS)}` : ''}
           </p>
         </div>
-        <DeleteVideoButton id={v.id} />
+        <div className="flex flex-wrap items-center gap-2">
+          <WatchLaterButton videoId={v.id} initial={v.watchLater} />
+          <AddToProject itemType="video" itemId={v.id} projects={projects} />
+          <DeleteVideoButton id={v.id} />
+        </div>
       </header>
+
+      <div className="mt-4">
+        <TopicEditor videoId={v.id} initial={v.topics ?? []} />
+      </div>
 
       <details className="mt-6 rounded-xl border border-border bg-surface p-4">
         <summary className="cursor-pointer font-medium">Keyboard shortcuts</summary>

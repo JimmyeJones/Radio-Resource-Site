@@ -3,6 +3,7 @@ import { runYtDownload } from './yt-download';
 import { runArticleArchive } from './article-archive';
 import { runChannelPoll } from './channel-poll';
 import { runTleRefresh } from './tle-refresh';
+import { runDatasheetFetch } from './datasheet-fetch';
 
 export type ProgressFn = (pct: number, msg?: string) => void;
 
@@ -19,6 +20,9 @@ export async function runJob(job: Job, onProgress: ProgressFn): Promise<void> {
       return;
     case 'tle_refresh':
       await runTleRefresh(job, onProgress);
+      return;
+    case 'datasheet_fetch':
+      await runDatasheetFetch(job, onProgress);
       return;
     default: {
       const _exhaustive: never = job.kind;

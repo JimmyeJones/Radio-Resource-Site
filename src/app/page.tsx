@@ -1,23 +1,28 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { db } from '@/db/client';
-import { videos, articles, hubItems } from '@/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { videos, articles, hubItems, projects, settings } from '@/db/schema';
+import { desc, eq, sql } from 'drizzle-orm';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JobFeed } from '@/components/job-feed';
 import { formatRelative, formatDuration } from '@/lib/format';
-import { Radio, Library, BookmarkPlus, Wrench, ArrowRight } from 'lucide-react';
+import { Radio, Library, BookmarkPlus, Wrench, ArrowRight, FolderKanban } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default function Dashboard() {
+  const s = db.select().from(settings).where(eq(settings.id, 1)).get();
+  if (s && !s.setupComplete) redirect('/setup');
+
   const recentVideos = db.select().from(videos).orderBy(desc(videos.addedAt)).limit(4).all();
   const recentArticles = db.select().from(articles).orderBy(desc(articles.archivedAt)).limit(4).all();
   const counts = {
     videos: db.select({ n: sql<number>`count(*)` }).from(videos).get()?.n ?? 0,
     articles: db.select({ n: sql<number>`count(*)` }).from(articles).get()?.n ?? 0,
     hub: db.select({ n: sql<number>`count(*)` }).from(hubItems).get()?.n ?? 0,
+    projects: db.select({ n: sql<number>`count(*)` }).from(projects).get()?.n ?? 0,
   };
 
   return (
@@ -37,6 +42,7 @@ export default function Dashboard() {
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <QuickLink href="/library/videos" Icon={Library}>Open library</QuickLink>
+              <QuickLink href="/projects" Icon={FolderKanban}>Projects</QuickLink>
               <QuickLink href="/hub" Icon={BookmarkPlus}>Resource hub</QuickLink>
               <QuickLink href="/tools" Icon={Wrench}>Reference tools</QuickLink>
             </div>
@@ -47,9 +53,10 @@ export default function Dashboard() {
       <JobFeed />
 
       <PageHeader title="At a glance" />
-      <div className="mb-10 grid gap-3 sm:grid-cols-3">
+      <div className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Videos" value={counts.videos} href="/library/videos" />
         <Stat label="Archived articles" value={counts.articles} href="/library/articles" />
+        <Stat label="Projects" value={counts.projects} href="/projects" />
         <Stat label="Hub entries" value={counts.hub} href="/hub" />
       </div>
 

@@ -4,6 +4,7 @@ import * as schema from './schema';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { BOOTSTRAP_SQL } from './bootstrap-sql';
+import { runMigrations } from './migrations';
 
 const dbPath = process.env.DATABASE_PATH ?? './data/app.db';
 
@@ -26,6 +27,7 @@ function open(): { raw: Database.Database; drz: BetterSQLite3Database<typeof sch
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
   sqlite.exec(BOOTSTRAP_SQL);
+  runMigrations(sqlite);
   const drz = drizzle(sqlite, { schema });
   if (process.env.NODE_ENV !== 'production') {
     globalThis.__sqlite = sqlite;

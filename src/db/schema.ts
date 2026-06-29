@@ -14,6 +14,8 @@ export const videos = sqliteTable('videos', {
   thumbnailPath: text('thumbnail_path'),
   subsPath: text('subs_path'),
   infoJsonPath: text('info_json_path'),
+  topics: text('topics', { mode: 'json' }).$type<string[]>().notNull().default([]),
+  watchLater: integer('watch_later', { mode: 'boolean' }).notNull().default(false),
   addedAt: integer('added_at').notNull().default(sql`(unixepoch())`),
   watchedAt: integer('watched_at'),
   progressS: integer('progress_s').notNull().default(0),
@@ -66,7 +68,7 @@ export type NewHubItem = typeof hubItems.$inferInsert;
 export const jobs = sqliteTable('jobs', {
   id: text('id').primaryKey(),
   kind: text('kind', {
-    enum: ['yt_download', 'article_archive', 'channel_poll', 'tle_refresh'],
+    enum: ['yt_download', 'article_archive', 'channel_poll', 'tle_refresh', 'datasheet_fetch'],
   }).notNull(),
   payload: text('payload', { mode: 'json' }).notNull().$type<Record<string, unknown>>(),
   status: text('status', {
@@ -97,6 +99,7 @@ export const settings = sqliteTable('settings', {
   maxHeight: integer('max_height').notNull().default(1080),
   defaultSubsLang: text('default_subs_lang').notNull().default('en'),
   mirrorArticleImages: integer('mirror_article_images', { mode: 'boolean' }).notNull().default(false),
+  setupComplete: integer('setup_complete', { mode: 'boolean' }).notNull().default(false),
 });
 export type Settings = typeof settings.$inferSelect;
 
@@ -109,3 +112,40 @@ export const tleCache = sqliteTable('tle_cache', {
   fetchedAt: integer('fetched_at').notNull().default(sql`(unixepoch())`),
 });
 export type TleEntry = typeof tleCache.$inferSelect;
+
+export const projects = sqliteTable('projects', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  status: text('status', { enum: ['planning', 'active', 'done', 'archived'] })
+    .notNull()
+    .default('planning'),
+  notes: text('notes').notNull().default(''),
+  createdAt: integer('created_at').notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at').notNull().default(sql`(unixepoch())`),
+});
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;
+
+export const projectItems = sqliteTable('project_items', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  itemType: text('item_type', { enum: ['video', 'article', 'hub', 'datasheet'] }).notNull(),
+  itemId: text('item_id').notNull(),
+  note: text('note'),
+  createdAt: integer('created_at').notNull().default(sql`(unixepoch())`),
+});
+export type ProjectItem = typeof projectItems.$inferSelect;
+
+export const datasheets = sqliteTable('datasheets', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  partNumber: text('part_number'),
+  manufacturer: text('manufacturer'),
+  sourceUrl: text('source_url'),
+  filePath: text('file_path'),
+  notes: text('notes'),
+  addedAt: integer('added_at').notNull().default(sql`(unixepoch())`),
+});
+export type Datasheet = typeof datasheets.$inferSelect;
+export type NewDatasheet = typeof datasheets.$inferInsert;

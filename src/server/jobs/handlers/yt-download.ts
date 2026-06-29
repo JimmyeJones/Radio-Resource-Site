@@ -6,6 +6,8 @@ import { ensureMediaDirs, YT_DIR } from '@/server/paths';
 import { randomUUID } from 'node:crypto';
 import type { ProgressFn } from './index';
 import { statSync } from 'node:fs';
+import { classify } from '@/lib/topics';
+import { indexVideo } from '@/server/search';
 
 interface Payload {
   url: string;
@@ -36,6 +38,8 @@ export async function runYtDownload(job: Job, onProgress: ProgressFn) {
   let sizeBytes = 0;
   try { sizeBytes = statSync(res.filePath).size; } catch { /* noop */ }
 
+  const topics = classify(res.info.title, res.info.description, res.info.channel);
+
   const row = {
     id,
     youtubeId: ytId,
@@ -49,6 +53,8 @@ export async function runYtDownload(job: Job, onProgress: ProgressFn) {
     thumbnailPath: res.thumbPath ?? null,
     subsPath: res.subsPath ?? null,
     infoJsonPath: res.infoJsonPath ?? null,
+    // Preserve manual topics on re-download; only classify on first insert.
+    ...(existing ? {} : { topics }),
   } satisfies Partial<typeof videos.$inferInsert> as typeof videos.$inferInsert;
 
   if (existing) {
@@ -56,6 +62,7 @@ export async function runYtDownload(job: Job, onProgress: ProgressFn) {
   } else {
     db.insert(videos).values(row).run();
   }
+  indexVideo(id);
   onProgress(100, `saved ${(sizeBytes / 1e6).toFixed(1)} MB`);
 }
 

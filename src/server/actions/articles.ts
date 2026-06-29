@@ -7,6 +7,8 @@ import { eq } from 'drizzle-orm';
 import { enqueueJob } from '@/server/jobs/queue';
 import { rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { projectItems } from '@/db/schema';
+import { removeDoc } from '@/server/search';
 
 const schema = z.object({ url: z.string().url() });
 
@@ -23,7 +25,9 @@ export async function deleteArticleAction(id: string) {
   const a = db.select().from(articles).where(eq(articles.id, id)).get();
   if (!a) return;
   await rm(dirname(a.htmlPath), { recursive: true, force: true }).catch(() => undefined);
+  db.delete(projectItems).where(eq(projectItems.itemId, id)).run();
   db.delete(articles).where(eq(articles.id, id)).run();
+  removeDoc('article', id);
   revalidatePath('/library/articles');
 }
 
