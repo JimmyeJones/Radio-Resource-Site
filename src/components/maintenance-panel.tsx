@@ -3,9 +3,9 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { rebuildSearchIndexAction } from '@/server/actions/maintenance';
+import { rebuildSearchIndexAction, refreshSpaceWeatherAction } from '@/server/actions/maintenance';
 import { backfillTopicsAction } from '@/server/actions/videos';
-import { RefreshCcw, Tags, Wand2 } from 'lucide-react';
+import { RefreshCcw, Tags, Wand2, Sun } from 'lucide-react';
 
 export function MaintenancePanel() {
   const [pending, start] = useTransition();
@@ -47,6 +47,18 @@ export function MaintenancePanel() {
           }
         >
           <RefreshCcw className="h-4 w-4" aria-hidden /> Rebuild search index
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              await refreshSpaceWeatherAction();
+              setMsg('Space-weather refresh queued.');
+            })
+          }
+        >
+          <Sun className="h-4 w-4" aria-hidden /> Refresh space weather
         </Button>
       </div>
       {msg ? (

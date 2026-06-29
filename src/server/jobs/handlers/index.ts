@@ -5,6 +5,7 @@ import { runChannelPoll } from './channel-poll';
 import { runTleRefresh } from './tle-refresh';
 import { runDatasheetFetch } from './datasheet-fetch';
 import { runDatasheetLookup } from './datasheet-lookup';
+import { runSpaceWeatherRefresh } from './space-weather-refresh';
 
 export type ProgressFn = (pct: number, msg?: string) => void;
 
@@ -28,9 +29,11 @@ export async function runJob(job: Job, onProgress: ProgressFn): Promise<void> {
     case 'datasheet_lookup':
       await runDatasheetLookup(job, onProgress);
       return;
-    case 'feed_poll':
     case 'space_weather_refresh':
-      // Registered now (job-kind union); handlers land in later roadmap phases.
+      await runSpaceWeatherRefresh(job, onProgress);
+      return;
+    case 'feed_poll':
+      // Registered now (job-kind union); handler lands in Phase D.
       throw new Error(`Job kind not yet implemented: ${job.kind}`);
     default: {
       const _exhaustive: never = job.kind;

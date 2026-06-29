@@ -8,6 +8,7 @@ import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JobFeed } from '@/components/job-feed';
 import { NextPassWidget } from '@/components/next-pass-widget';
+import { SpaceWeatherPanel } from '@/components/space-weather-panel';
 import { formatRelative, formatDuration } from '@/lib/format';
 import { Radio, Library, BookmarkPlus, Wrench, ArrowRight, FolderKanban } from 'lucide-react';
 
@@ -53,6 +54,9 @@ export default function Dashboard() {
 
       <JobFeed />
       <NextPassWidget />
+      <div className="mb-6">
+        <SpaceWeatherPanel />
+      </div>
 
       <PageHeader title="At a glance" />
       <div className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

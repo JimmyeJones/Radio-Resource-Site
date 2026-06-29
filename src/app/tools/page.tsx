@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal, Waves, Gauge, Binary, Zap, Table, Calculator, Plug } from 'lucide-react';
+import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal, Waves, Gauge, Binary, Zap, Table, Calculator, Plug, Sun, GraduationCap } from 'lucide-react';
 
 const TOOLS = [
   {
@@ -65,6 +65,12 @@ const TOOLS = [
     Icon: Satellite,
   },
   {
+    href: '/tools/propagation',
+    title: 'Propagation & Space Weather',
+    description: 'Solar flux, K-index, and an HF band-condition estimate from NOAA SWPC.',
+    Icon: Sun,
+  },
+  {
     href: '/tools/signals',
     title: 'Signal ID Reference',
     description: 'Identify common signals on a waterfall: APT, ADS-B, FT8, AIS, and more.',
@@ -99,6 +105,12 @@ const TOOLS = [
     title: 'Electronics Tables',
     description: 'E-series values, AWG wire, and SMD package sizes.',
     Icon: Table,
+  },
+  {
+    href: '/study',
+    title: 'License Study',
+    description: 'Flashcards and scored practice tests for the Technician exam.',
+    Icon: GraduationCap,
   },
 ];
 
