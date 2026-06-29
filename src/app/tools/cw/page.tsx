@@ -4,12 +4,15 @@ import { MORSE, toMorse, RST_READABILITY, RST_STRENGTH, RST_TONE, PROSIGNS } fro
 import { PageHeader } from '@/components/page-header';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { CwTrainer } from '@/components/cw-trainer';
 
 export default function CwPage() {
   const [text, setText] = useState('CQ DE');
   return (
     <div>
-      <PageHeader title="CW reference" description="Morse table & translator, the RST system, and common prosigns/abbreviations." />
+      <PageHeader title="CW reference" description="Morse table & translator, an audio trainer, the RST system, and common prosigns/abbreviations." />
+
+      <CwTrainer />
 
       <Card className="mb-6">
         <CardTitle className="mb-2">Text → Morse</CardTitle>

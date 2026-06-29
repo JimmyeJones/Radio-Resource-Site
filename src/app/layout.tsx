@@ -2,11 +2,19 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Nav } from '@/components/nav';
 import { CommandPalette } from '@/components/command-palette';
+import { KeyboardHelp } from '@/components/keyboard-help';
 
 export const metadata: Metadata = {
   title: { default: 'Radio Resource Site', template: '%s · Radio Resource' },
   description:
     'Self-hosted distraction-free library for ham radio, satellites, and radio astronomy content.',
+  applicationName: 'Radio Resource Site',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Radio' },
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icon.svg' }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -41,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <Nav />
         <CommandPalette />
+        <KeyboardHelp />
         <main id="main" className="mx-auto max-w-7xl px-4 py-8">
           {children}
         </main>
