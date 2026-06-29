@@ -4,7 +4,7 @@ import { videos, articles, datasheets } from '@/db/schema';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
-import { Video, Newspaper, ArrowRight, FileText, Clock } from 'lucide-react';
+import { Video, Newspaper, ArrowRight, FileText, Clock, Rss } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +24,7 @@ export default function LibraryIndex() {
     { href: '/library/queue', Icon: Clock, title: 'Watch later', desc: `${queueCount} queued` },
     { href: '/library/articles', Icon: Newspaper, title: 'Articles', desc: `${artCount} archived · reader view` },
     { href: '/library/datasheets', Icon: FileText, title: 'Datasheets', desc: `${dsCount} saved · offline PDFs` },
+    { href: '/feeds', Icon: Rss, title: 'Feeds', desc: 'Blogs & podcasts · auto-archive' },
   ];
 
   return (

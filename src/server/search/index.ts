@@ -56,6 +56,39 @@ export function vttToText(vttPath: string): string {
   return out.join(' ');
 }
 
+export interface VttCue {
+  start: number; // seconds
+  text: string;
+}
+
+/** Parse a WebVTT file into timestamped cues. */
+export function parseVttCues(vttPath: string): VttCue[] {
+  let raw = '';
+  try {
+    raw = readFileSync(vttPath, 'utf8');
+  } catch {
+    return [];
+  }
+  const cues: VttCue[] = [];
+  const blocks = raw.split(/\r?\n\r?\n/);
+  for (const block of blocks) {
+    const lines = block.split(/\r?\n/).map((l) => l.trim());
+    const tsLine = lines.find((l) => l.includes('-->'));
+    if (!tsLine) continue;
+    const m = tsLine.match(/(\d{2}):(\d{2}):(\d{2})[.,](\d{3})/);
+    if (!m) continue;
+    const start = Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) + Number(m[4]) / 1000;
+    const text = lines
+      .filter((l) => l && !l.includes('-->') && l !== 'WEBVTT' && !/^\d+$/.test(l))
+      .map((l) => l.replace(/<[^>]+>/g, ''))
+      .join(' ')
+      .trim();
+    if (text) cues.push({ start, text });
+  }
+  // De-dup consecutive identical lines (auto-subs repeat a lot).
+  return cues.filter((c, i) => i === 0 || c.text !== cues[i - 1].text);
+}
+
 export function indexVideo(id: string) {
   const v = db.select().from(videos).where(eq(videos.id, id)).get();
   if (!v) return;
