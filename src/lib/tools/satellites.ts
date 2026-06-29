@@ -120,3 +120,25 @@ export function latLonToGrid(lat: number, lon: number): string {
     String.fromCharCode(A + F6).toLowerCase()
   );
 }
+
+/** Great-circle distance (km) and initial bearing (°) between two grid squares. */
+export function gridDistanceBearing(
+  fromGrid: string,
+  toGrid: string,
+): { distanceKm: number; bearingDeg: number } | null {
+  const a = gridToLatLon(fromGrid);
+  const b = gridToLatLon(toGrid);
+  if (!a || !b) return null;
+  const R = 6371; // km
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const φ1 = toRad(a.lat);
+  const φ2 = toRad(b.lat);
+  const Δφ = toRad(b.lat - a.lat);
+  const Δλ = toRad(b.lon - a.lon);
+  const h = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  const distanceKm = 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const bearingDeg = (Math.atan2(y, x) * 180) / Math.PI;
+  return { distanceKm, bearingDeg: (bearingDeg + 360) % 360 };
+}

@@ -43,6 +43,26 @@ export function mismatchLossDb(vswr: number): number {
   return -10 * Math.log10(1 - g * g);
 }
 
+// dBi is referenced to an isotropic radiator; dBd to a half-wave dipole.
+// A dipole has 2.15 dBi of gain, so dBd = dBi − 2.15.
+export const DIPOLE_DBI = 2.15;
+export function dbiToDbd(dbi: number): number {
+  return dbi - DIPOLE_DBI;
+}
+export function dbdToDbi(dbd: number): number {
+  return dbd + DIPOLE_DBI;
+}
+
+/** ERP (W, dipole-referenced) from TX power minus losses plus antenna gain in dBd. */
+export function erpWatts(txWatts: number, gainDbd: number, lossDb = 0): number {
+  return txWatts * Math.pow(10, (gainDbd - lossDb) / 10);
+}
+
+/** EIRP (W, isotropic-referenced) from TX power minus losses plus antenna gain in dBi. */
+export function eirpWatts(txWatts: number, gainDbi: number, lossDb = 0): number {
+  return txWatts * Math.pow(10, (gainDbi - lossDb) / 10);
+}
+
 export interface LinkBudgetInput {
   txPowerDbm: number;
   txAntennaGainDbi: number;
