@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal } from 'lucide-react';
+import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal, Waves, Gauge, Binary, Zap, Table } from 'lucide-react';
 
 const TOOLS = [
   {
@@ -51,6 +51,42 @@ const TOOLS = [
     title: 'Satellite Pass Predictions',
     description: 'Next passes for the ISS, amateur, and weather satellites at your QTH.',
     Icon: Satellite,
+  },
+  {
+    href: '/tools/signals',
+    title: 'Signal ID Reference',
+    description: 'Identify common signals on a waterfall: APT, ADS-B, FT8, AIS, and more.',
+    Icon: Waves,
+  },
+  {
+    href: '/tools/band-designations',
+    title: 'Band Designations',
+    description: 'ITU bands plus IEEE radar/microwave letter bands (L–Ka).',
+    Icon: Signal,
+  },
+  {
+    href: '/tools/digital-modes',
+    title: 'Digital Modes',
+    description: 'FT8, PSK31, RTTY, WSPR and friends — bandwidth and typical use.',
+    Icon: Binary,
+  },
+  {
+    href: '/tools/s-meter',
+    title: 'dB & S-meter',
+    description: 'S-units to dBm/µV and quick dB power/voltage ratios.',
+    Icon: Gauge,
+  },
+  {
+    href: '/tools/cw',
+    title: 'CW Reference',
+    description: 'Morse table & translator, the RST system, and prosigns.',
+    Icon: Zap,
+  },
+  {
+    href: '/tools/references',
+    title: 'Electronics Tables',
+    description: 'E-series values, AWG wire, and SMD package sizes.',
+    Icon: Table,
   },
 ];
 

@@ -1,8 +1,16 @@
+export interface SatFreq {
+  label: string;
+  downlinkMHz?: number;
+  uplinkMHz?: number;
+  mode: string;
+}
+
 export interface SatPreset {
   name: string;
   norad: number;
   group: 'Amateur' | 'Weather' | 'Crewed' | 'Space Telescope';
   description?: string;
+  frequencies?: SatFreq[];
 }
 
 // CelesTrak group endpoints (TLE format).
@@ -13,14 +21,65 @@ export const CELESTRAK_GROUPS = {
 };
 
 export const DEFAULT_PRESETS: SatPreset[] = [
-  { name: 'ISS (ZARYA)', norad: 25544, group: 'Crewed', description: 'International Space Station (voice/APRS repeater).' },
-  { name: 'AO-91 (RadFxSat)', norad: 43017, group: 'Amateur', description: 'FM voice repeater.' },
-  { name: 'SO-50', norad: 27607, group: 'Amateur', description: 'FM voice repeater.' },
-  { name: 'RS-44', norad: 44909, group: 'Amateur', description: 'Linear transponder.' },
-  { name: 'NOAA-15', norad: 25338, group: 'Weather', description: 'APT weather imagery on 137.620 MHz.' },
-  { name: 'NOAA-18', norad: 28654, group: 'Weather', description: 'APT weather imagery on 137.9125 MHz.' },
-  { name: 'NOAA-19', norad: 33591, group: 'Weather', description: 'APT weather imagery on 137.100 MHz.' },
-  { name: 'METEOR-M 2', norad: 40069, group: 'Weather', description: 'LRPT digital weather imagery.' },
+  {
+    name: 'ISS (ZARYA)',
+    norad: 25544,
+    group: 'Crewed',
+    description: 'International Space Station (voice/APRS/SSTV).',
+    frequencies: [
+      { label: 'Voice downlink', downlinkMHz: 145.8, uplinkMHz: 144.49, mode: 'FM' },
+      { label: 'APRS / packet', downlinkMHz: 145.825, uplinkMHz: 145.825, mode: 'AFSK 1k2' },
+    ],
+  },
+  {
+    name: 'AO-91 (RadFxSat)',
+    norad: 43017,
+    group: 'Amateur',
+    description: 'FM voice repeater.',
+    frequencies: [{ label: 'FM repeater', downlinkMHz: 145.96, uplinkMHz: 435.25, mode: 'FM (67 Hz CTCSS)' }],
+  },
+  {
+    name: 'SO-50',
+    norad: 27607,
+    group: 'Amateur',
+    description: 'FM voice repeater.',
+    frequencies: [{ label: 'FM repeater', downlinkMHz: 436.795, uplinkMHz: 145.85, mode: 'FM (67 Hz CTCSS)' }],
+  },
+  {
+    name: 'RS-44',
+    norad: 44909,
+    group: 'Amateur',
+    description: 'Linear (inverting) transponder.',
+    frequencies: [{ label: 'SSB/CW transponder', downlinkMHz: 435.67, uplinkMHz: 145.96, mode: 'Linear inverting' }],
+  },
+  {
+    name: 'NOAA-15',
+    norad: 25338,
+    group: 'Weather',
+    description: 'APT weather imagery.',
+    frequencies: [{ label: 'APT', downlinkMHz: 137.62, mode: 'APT' }],
+  },
+  {
+    name: 'NOAA-18',
+    norad: 28654,
+    group: 'Weather',
+    description: 'APT weather imagery.',
+    frequencies: [{ label: 'APT', downlinkMHz: 137.9125, mode: 'APT' }],
+  },
+  {
+    name: 'NOAA-19',
+    norad: 33591,
+    group: 'Weather',
+    description: 'APT weather imagery.',
+    frequencies: [{ label: 'APT', downlinkMHz: 137.1, mode: 'APT' }],
+  },
+  {
+    name: 'METEOR-M 2',
+    norad: 40069,
+    group: 'Weather',
+    description: 'LRPT digital weather imagery.',
+    frequencies: [{ label: 'LRPT', downlinkMHz: 137.1, mode: 'LRPT QPSK' }],
+  },
 ];
 
 // Maidenhead grid <-> lat/lon helpers

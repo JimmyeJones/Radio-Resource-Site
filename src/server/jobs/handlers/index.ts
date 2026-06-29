@@ -24,6 +24,11 @@ export async function runJob(job: Job, onProgress: ProgressFn): Promise<void> {
     case 'datasheet_fetch':
       await runDatasheetFetch(job, onProgress);
       return;
+    case 'datasheet_lookup':
+    case 'feed_poll':
+    case 'space_weather_refresh':
+      // Registered now (job-kind union); handlers land in later roadmap phases.
+      throw new Error(`Job kind not yet implemented: ${job.kind}`);
     default: {
       const _exhaustive: never = job.kind;
       throw new Error(`Unknown job kind: ${_exhaustive as string}`);

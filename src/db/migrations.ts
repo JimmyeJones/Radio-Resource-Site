@@ -69,4 +69,114 @@ export function runMigrations(sqlite: Database.Database): void {
       tokenize = 'porter unicode61'
     );
   `);
+
+  // ---- Addendum 3 roadmap tables ----
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS frequencies (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      freq_hz INTEGER NOT NULL,
+      mode TEXT,
+      band TEXT,
+      location TEXT,
+      tags TEXT NOT NULL DEFAULT '[]',
+      notes TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS parts (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      part_number TEXT,
+      manufacturer TEXT,
+      category TEXT,
+      value TEXT,
+      package TEXT,
+      qty INTEGER NOT NULL DEFAULT 0,
+      min_qty INTEGER NOT NULL DEFAULT 0,
+      location TEXT,
+      datasheet_id TEXT,
+      notes TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS qsos (
+      id TEXT PRIMARY KEY,
+      callsign TEXT NOT NULL,
+      freq_mhz REAL,
+      band TEXT,
+      mode TEXT,
+      qso_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      rst_sent TEXT,
+      rst_rcvd TEXT,
+      name TEXT,
+      qth TEXT,
+      grid TEXT,
+      country TEXT,
+      satellite TEXT,
+      notes TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    CREATE INDEX IF NOT EXISTS qsos_at_idx ON qsos(qso_at DESC);
+
+    CREATE TABLE IF NOT EXISTS notes (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL DEFAULT '',
+      tags TEXT NOT NULL DEFAULT '[]',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS feeds (
+      id TEXT PRIMARY KEY,
+      url TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      kind TEXT NOT NULL DEFAULT 'blog',
+      auto_archive INTEGER NOT NULL DEFAULT 1,
+      last_polled_at INTEGER,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS feed_items (
+      id TEXT PRIMARY KEY,
+      feed_id TEXT NOT NULL,
+      guid TEXT NOT NULL,
+      title TEXT NOT NULL,
+      url TEXT,
+      audio_url TEXT,
+      published_at INTEGER,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS feed_items_guid_idx ON feed_items(feed_id, guid);
+
+    CREATE TABLE IF NOT EXISTS video_bookmarks (
+      id TEXT PRIMARY KEY,
+      video_id TEXT NOT NULL,
+      t_seconds REAL NOT NULL,
+      label TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    CREATE INDEX IF NOT EXISTS video_bookmarks_video_idx ON video_bookmarks(video_id, t_seconds);
+
+    CREATE TABLE IF NOT EXISTS space_weather (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      sfi REAL,
+      sunspots INTEGER,
+      k_index REAL,
+      a_index REAL,
+      aurora_power REAL,
+      source TEXT,
+      fetched_at INTEGER,
+      raw TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS exam_attempts (
+      id TEXT PRIMARY KEY,
+      pool TEXT NOT NULL,
+      total INTEGER NOT NULL,
+      correct INTEGER NOT NULL,
+      taken_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+  `);
 }

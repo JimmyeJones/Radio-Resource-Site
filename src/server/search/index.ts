@@ -1,9 +1,18 @@
 import { rawDb, db } from '@/db/client';
-import { videos, articles, hubItems, datasheets, projects } from '@/db/schema';
+import { videos, articles, hubItems, datasheets, projects, frequencies, parts, qsos, notes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
 
-export type DocType = 'video' | 'article' | 'hub' | 'datasheet' | 'project';
+export type DocType =
+  | 'video'
+  | 'article'
+  | 'hub'
+  | 'datasheet'
+  | 'project'
+  | 'frequency'
+  | 'part'
+  | 'qso'
+  | 'note';
 
 export interface SearchHit {
   docType: DocType;
@@ -93,6 +102,41 @@ export function indexProject(id: string) {
   upsert('project', id, `/projects/${id}`, p.name, body);
 }
 
+export function indexFrequency(id: string) {
+  const f = db.select().from(frequencies).where(eq(frequencies.id, id)).get();
+  if (!f) return;
+  const mhz = (f.freqHz / 1e6).toFixed(4);
+  const body = [`${mhz} MHz`, f.mode, f.band, f.location, (f.tags ?? []).join(' '), f.notes]
+    .filter(Boolean)
+    .join('\n');
+  upsert('frequency', id, `/frequencies#${id}`, f.name, body);
+}
+
+export function indexPart(id: string) {
+  const p = db.select().from(parts).where(eq(parts.id, id)).get();
+  if (!p) return;
+  const body = [p.partNumber, p.manufacturer, p.category, p.value, p.pkg, p.location, p.notes]
+    .filter(Boolean)
+    .join('\n');
+  upsert('part', id, `/parts#${id}`, p.name, body);
+}
+
+export function indexQso(id: string) {
+  const q = db.select().from(qsos).where(eq(qsos.id, id)).get();
+  if (!q) return;
+  const body = [q.band, q.mode, q.name, q.qth, q.grid, q.country, q.satellite, q.notes]
+    .filter(Boolean)
+    .join('\n');
+  upsert('qso', id, `/logbook#${id}`, q.callsign, body);
+}
+
+export function indexNote(id: string) {
+  const n = db.select().from(notes).where(eq(notes.id, id)).get();
+  if (!n) return;
+  const body = [(n.tags ?? []).join(' '), n.body].filter(Boolean).join('\n');
+  upsert('note', id, `/notes/${id}`, n.title, body);
+}
+
 export function reindexAll(): number {
   rawDb.exec('DELETE FROM search_index');
   let n = 0;
@@ -101,6 +145,10 @@ export function reindexAll(): number {
   for (const h of db.select().from(hubItems).all()) { indexHubItem(h.id); n++; }
   for (const d of db.select().from(datasheets).all()) { indexDatasheet(d.id); n++; }
   for (const p of db.select().from(projects).all()) { indexProject(p.id); n++; }
+  for (const f of db.select().from(frequencies).all()) { indexFrequency(f.id); n++; }
+  for (const p of db.select().from(parts).all()) { indexPart(p.id); n++; }
+  for (const q of db.select().from(qsos).all()) { indexQso(q.id); n++; }
+  for (const nt of db.select().from(notes).all()) { indexNote(nt.id); n++; }
   return n;
 }
 

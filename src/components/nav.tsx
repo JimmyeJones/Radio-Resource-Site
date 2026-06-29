@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Radio, Library, BookmarkPlus, Wrench, Settings, Home, FolderKanban } from 'lucide-react';
+import { Radio, Library, BookmarkPlus, Wrench, Settings, Home, FolderKanban, RadioTower } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ThemeToggle } from './theme-toggle';
 import { NavSearch } from './nav-search';
@@ -10,6 +10,7 @@ const items = [
   { href: '/', label: 'Home', Icon: Home },
   { href: '/library', label: 'Library', Icon: Library },
   { href: '/projects', label: 'Projects', Icon: FolderKanban },
+  { href: '/frequencies', label: 'Frequencies', Icon: RadioTower },
   { href: '/hub', label: 'Hub', Icon: BookmarkPlus },
   { href: '/tools', label: 'Tools', Icon: Wrench },
   { href: '/settings', label: 'Settings', Icon: Settings },

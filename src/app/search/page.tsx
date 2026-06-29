@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { search, type DocType } from '@/server/search';
 import { SearchBox } from '@/components/search-box';
-import { Video, Newspaper, BookmarkPlus, FileText, FolderKanban } from 'lucide-react';
+import { Video, Newspaper, BookmarkPlus, FileText, FolderKanban, RadioTower, Cpu, BookText, NotebookPen } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +14,10 @@ const TYPE_META: Record<DocType, { label: string; Icon: typeof Video; tone: 'acc
   hub: { label: 'Link', Icon: BookmarkPlus, tone: 'neutral' },
   datasheet: { label: 'Datasheet', Icon: FileText, tone: 'warning' },
   project: { label: 'Project', Icon: FolderKanban, tone: 'accent' },
+  frequency: { label: 'Frequency', Icon: RadioTower, tone: 'accent' },
+  part: { label: 'Part', Icon: Cpu, tone: 'neutral' },
+  qso: { label: 'QSO', Icon: BookText, tone: 'success' },
+  note: { label: 'Note', Icon: NotebookPen, tone: 'neutral' },
 };
 
 export default function SearchPage({ searchParams }: { searchParams: { q?: string } }) {

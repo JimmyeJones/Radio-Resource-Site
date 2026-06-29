@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JobFeed } from '@/components/job-feed';
+import { NextPassWidget } from '@/components/next-pass-widget';
 import { formatRelative, formatDuration } from '@/lib/format';
 import { Radio, Library, BookmarkPlus, Wrench, ArrowRight, FolderKanban } from 'lucide-react';
 
@@ -51,6 +52,7 @@ export default function Dashboard() {
       </section>
 
       <JobFeed />
+      <NextPassWidget />
 
       <PageHeader title="At a glance" />
       <div className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
