@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal, Waves, Gauge, Binary, Zap, Table } from 'lucide-react';
+import { Radio, BookOpen, Compass, Satellite, ChevronRight, AudioLines, CircuitBoard, Antenna, Signal, Waves, Gauge, Binary, Zap, Table, Calculator, Plug } from 'lucide-react';
 
 const TOOLS = [
   {
@@ -27,6 +27,18 @@ const TOOLS = [
     title: 'RF Link Budget',
     description: 'Path loss, link budget, dBm/watt and VSWR/return-loss conversions.',
     Icon: Signal,
+  },
+  {
+    href: '/tools/electronics',
+    title: 'Electronics Calculators',
+    description: 'Resistor/cap/SMD codes, Ohm’s law, LED resistor, RC/LC filters, 555.',
+    Icon: Calculator,
+  },
+  {
+    href: '/tools/pinouts',
+    title: 'Connectors & Pinouts',
+    description: 'RF connector reference plus common IC and header pinouts.',
+    Icon: Plug,
   },
   {
     href: '/tools/q-codes',

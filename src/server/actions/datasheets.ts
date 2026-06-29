@@ -83,6 +83,25 @@ export async function uploadDatasheetAction(formData: FormData) {
   return { ok: true, id };
 }
 
+/** Best-effort: create a datasheet from a part number and queue an auto-lookup. */
+export async function lookupDatasheetAction(formData: FormData) {
+  const partNumber = String(formData.get('partNumber') ?? '').trim();
+  if (!partNumber) return { ok: false, error: 'Enter a part number' };
+  const id = randomUUID();
+  db.insert(datasheets)
+    .values({
+      id,
+      title: partNumber,
+      partNumber,
+      manufacturer: (formData.get('manufacturer') as string | null) || null,
+    })
+    .run();
+  indexDatasheet(id);
+  enqueueJob({ kind: 'datasheet_lookup', payload: { datasheetId: id, partNumber } });
+  revalidatePath('/library/datasheets');
+  return { ok: true, id };
+}
+
 export async function deleteDatasheetAction(id: string) {
   const d = db.select().from(datasheets).where(eq(datasheets.id, id)).get();
   if (!d) return;

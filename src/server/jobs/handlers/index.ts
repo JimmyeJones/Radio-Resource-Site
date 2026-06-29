@@ -4,6 +4,7 @@ import { runArticleArchive } from './article-archive';
 import { runChannelPoll } from './channel-poll';
 import { runTleRefresh } from './tle-refresh';
 import { runDatasheetFetch } from './datasheet-fetch';
+import { runDatasheetLookup } from './datasheet-lookup';
 
 export type ProgressFn = (pct: number, msg?: string) => void;
 
@@ -25,6 +26,8 @@ export async function runJob(job: Job, onProgress: ProgressFn): Promise<void> {
       await runDatasheetFetch(job, onProgress);
       return;
     case 'datasheet_lookup':
+      await runDatasheetLookup(job, onProgress);
+      return;
     case 'feed_poll':
     case 'space_weather_refresh':
       // Registered now (job-kind union); handlers land in later roadmap phases.

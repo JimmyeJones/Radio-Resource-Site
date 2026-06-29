@@ -1,12 +1,12 @@
 'use client';
 import { useState, useTransition } from 'react';
-import { addDatasheetUrlAction, uploadDatasheetAction } from '@/server/actions/datasheets';
+import { addDatasheetUrlAction, uploadDatasheetAction, lookupDatasheetAction } from '@/server/actions/datasheets';
 import { Input, Textarea } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Link2, Upload } from 'lucide-react';
+import { Link2, Upload, Search } from 'lucide-react';
 
 export function AddDatasheetForm() {
-  const [mode, setMode] = useState<'url' | 'upload'>('url');
+  const [mode, setMode] = useState<'url' | 'upload' | 'lookup'>('url');
   const [pending, start] = useTransition();
   const [status, setStatus] = useState<string | null>(null);
 
@@ -15,9 +15,12 @@ export function AddDatasheetForm() {
     const fd = new FormData(e.currentTarget);
     const form = e.currentTarget;
     start(async () => {
-      const res = mode === 'url' ? await addDatasheetUrlAction(fd) : await uploadDatasheetAction(fd);
+      const res =
+        mode === 'url' ? await addDatasheetUrlAction(fd)
+        : mode === 'upload' ? await uploadDatasheetAction(fd)
+        : await lookupDatasheetAction(fd);
       if (res?.ok) {
-        setStatus(mode === 'url' ? 'Queued — downloading the PDF.' : 'Uploaded.');
+        setStatus(mode === 'upload' ? 'Uploaded.' : mode === 'lookup' ? 'Searching for the datasheet…' : 'Queued — downloading the PDF.');
         form.reset();
       } else {
         setStatus(res?.error ?? 'Failed');
@@ -30,7 +33,7 @@ export function AddDatasheetForm() {
       <fieldset className="mb-3">
         <legend className="sr-only">Source</legend>
         <div role="radiogroup" className="inline-flex rounded-md border border-border bg-elevated p-0.5 text-sm">
-          {(['url', 'upload'] as const).map((m) => (
+          {(['url', 'upload', 'lookup'] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -39,12 +42,24 @@ export function AddDatasheetForm() {
               onClick={() => setMode(m)}
               className={`rounded px-3 py-1 ${mode === m ? 'bg-surface font-medium text-fg' : 'text-fg/70 hover:text-fg'}`}
             >
-              {m === 'url' ? 'From URL' : 'Upload PDF'}
+              {m === 'url' ? 'From URL' : m === 'upload' ? 'Upload PDF' : 'By part #'}
             </button>
           ))}
         </div>
       </fieldset>
 
+      {mode === 'lookup' ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="ds-lookup-part" className="mb-1 block text-sm font-medium">Part number</label>
+            <Input id="ds-lookup-part" name="partNumber" required placeholder="NE555 / STM32F103 / R820T2" />
+          </div>
+          <div>
+            <label htmlFor="ds-lookup-mfr" className="mb-1 block text-sm font-medium">Manufacturer (optional)</label>
+            <Input id="ds-lookup-mfr" name="manufacturer" />
+          </div>
+        </div>
+      ) : (
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="ds-title" className="mb-1 block text-sm font-medium">Title</label>
@@ -81,14 +96,18 @@ export function AddDatasheetForm() {
           <Textarea id="ds-notes" name="notes" rows={2} />
         </div>
       </div>
+      )}
 
       <div className="mt-3 flex items-center gap-3">
         <Button type="submit" disabled={pending}>
-          {mode === 'url' ? <Link2 className="h-4 w-4" aria-hidden /> : <Upload className="h-4 w-4" aria-hidden />}
-          {pending ? 'Working…' : mode === 'url' ? 'Fetch datasheet' : 'Upload datasheet'}
+          {mode === 'url' ? <Link2 className="h-4 w-4" aria-hidden /> : mode === 'lookup' ? <Search className="h-4 w-4" aria-hidden /> : <Upload className="h-4 w-4" aria-hidden />}
+          {pending ? 'Working…' : mode === 'url' ? 'Fetch datasheet' : mode === 'lookup' ? 'Find datasheet' : 'Upload datasheet'}
         </Button>
         {status ? <span role="status" aria-live="polite" className="text-sm">{status}</span> : null}
       </div>
+      {mode === 'lookup' ? (
+        <p className="mt-2 text-xs text-muted">Best-effort search — if no PDF is found, a search link is saved so you can finish manually.</p>
+      ) : null}
     </form>
   );
 }

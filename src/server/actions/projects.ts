@@ -2,12 +2,12 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/db/client';
-import { projects, projectItems, videos, articles, hubItems, datasheets } from '@/db/schema';
+import { projects, projectItems, videos, articles, hubItems, datasheets, parts, notes } from '@/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { indexProject, removeDoc } from '@/server/search';
 
-const ITEM_TYPES = ['video', 'article', 'hub', 'datasheet'] as const;
+const ITEM_TYPES = ['video', 'article', 'hub', 'datasheet', 'part', 'note'] as const;
 export type ProjectItemType = (typeof ITEM_TYPES)[number];
 
 export async function listProjectsLite() {
@@ -126,8 +126,18 @@ export async function getProjectItems(projectId: string) {
         if (r) { title = r.title; href = `/library/datasheets/${r.id}`; }
         break;
       }
+      case 'part': {
+        const r = db.select().from(parts).where(eq(parts.id, link.itemId)).get();
+        if (r) { title = r.partNumber ? `${r.name} (${r.partNumber})` : r.name; href = `/parts#${r.id}`; }
+        break;
+      }
+      case 'note': {
+        const r = db.select().from(notes).where(eq(notes.id, link.itemId)).get();
+        if (r) { title = r.title; href = `/notes/${r.id}`; }
+        break;
+      }
     }
-    return { linkId: link.id, itemType: link.itemType, title, href };
+    return { linkId: link.id, itemType: link.itemType, title, href, note: link.note };
   });
   return resolved;
 }

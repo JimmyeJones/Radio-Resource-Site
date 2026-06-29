@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { ProjectNotes } from '@/components/project-notes';
 import { ProjectControls } from '@/components/project-controls';
 import { UnlinkButton } from '@/components/unlink-button';
-import { Video, Newspaper, BookmarkPlus, FileText, ExternalLink } from 'lucide-react';
+import { Video, Newspaper, BookmarkPlus, FileText, ExternalLink, Cpu, NotebookPen } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +18,8 @@ const TYPE_META = {
   article: { label: 'Articles', Icon: Newspaper },
   hub: { label: 'Links', Icon: BookmarkPlus },
   datasheet: { label: 'Datasheets', Icon: FileText },
+  part: { label: 'Parts (BOM)', Icon: Cpu },
+  note: { label: 'Notes', Icon: NotebookPen },
 } as const;
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
@@ -25,7 +27,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   if (!p) notFound();
   const items = await getProjectItems(p.id);
 
-  const groups = (['video', 'article', 'hub', 'datasheet'] as const).map((t) => ({
+  const groups = (['video', 'article', 'hub', 'datasheet', 'part', 'note'] as const).map((t) => ({
     type: t,
     ...TYPE_META[t],
     rows: items.filter((i) => i.itemType === t),
