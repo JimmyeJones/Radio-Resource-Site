@@ -1,11 +1,19 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Nav } from '@/components/nav';
+import { CommandPalette } from '@/components/command-palette';
 
 export const metadata: Metadata = {
   title: { default: 'Radio Resource Site', template: '%s · Radio Resource' },
   description:
     'Self-hosted distraction-free library for ham radio, satellites, and radio astronomy content.',
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#0e74bc' },
+    { media: '(prefers-color-scheme: dark)', color: '#080b13' },
+  ],
 };
 
 const themeBoot = `
@@ -32,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <Nav />
+        <CommandPalette />
         <main id="main" className="mx-auto max-w-7xl px-4 py-8">
           {children}
         </main>

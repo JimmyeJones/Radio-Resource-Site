@@ -9,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { JobFeed } from '@/components/job-feed';
 import { NextPassWidget } from '@/components/next-pass-widget';
 import { SpaceWeatherPanel } from '@/components/space-weather-panel';
+import { WorldMap } from '@/components/world-map';
+import { HeroClock } from '@/components/hero-clock';
 import { formatRelative, formatDuration } from '@/lib/format';
-import { Radio, Library, BookmarkPlus, Wrench, ArrowRight, FolderKanban } from 'lucide-react';
+import { Radio, Library, Wrench, ArrowRight, FolderKanban, Globe } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,33 +31,47 @@ export default function Dashboard() {
 
   return (
     <div>
-      <section className="mb-10 rounded-2xl border border-border bg-gradient-to-br from-surface to-elevated p-8">
+      <section className="aurora rise-in mb-8 rounded-3xl border border-border bg-surface/60 p-8 sm:p-10">
         <div className="flex items-start gap-4">
-          <span className="rounded-xl bg-accent/15 p-3 text-accent">
+          <span className="rounded-2xl bg-accent/15 p-3 text-accent ring-1 ring-accent/20">
             <Radio className="h-7 w-7" aria-hidden />
           </span>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Your distraction-free radio library
+          <div className="min-w-0">
+            <p className="text-sm font-medium uppercase tracking-widest text-accent">Mission Control</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Your <span className="text-gradient">radio universe</span>, all in one place
             </h1>
             <p className="mt-2 max-w-2xl text-muted">
-              Ham radio, satellites, radio astronomy, SDR. Local downloads, clean reader, curated
-              hub, and interactive tools — no ads, no autoplay-next, no algorithm.
+              Ham radio, satellites, SDR, and PCB work — local, ad-free, and offline. Press{' '}
+              <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 text-xs">⌘K</kbd> to jump anywhere.
             </p>
+            <div className="mt-4"><HeroClock grid={s?.qthGrid ?? null} /></div>
             <div className="mt-5 flex flex-wrap gap-2">
-              <QuickLink href="/library/videos" Icon={Library}>Open library</QuickLink>
+              <QuickLink href="/map" Icon={Globe}>Live map</QuickLink>
+              <QuickLink href="/library/videos" Icon={Library}>Library</QuickLink>
               <QuickLink href="/projects" Icon={FolderKanban}>Projects</QuickLink>
-              <QuickLink href="/hub" Icon={BookmarkPlus}>Resource hub</QuickLink>
-              <QuickLink href="/tools" Icon={Wrench}>Reference tools</QuickLink>
+              <QuickLink href="/tools" Icon={Wrench}>Tools</QuickLink>
             </div>
           </div>
         </div>
       </section>
 
       <JobFeed />
-      <NextPassWidget />
-      <div className="mb-6">
-        <SpaceWeatherPanel />
+
+      <div className="mb-8 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+        <section aria-label="Live world map">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
+              <Globe className="h-4 w-4" aria-hidden /> Live map
+            </h2>
+            <Link href="/map" className="text-xs text-accent hover:underline">Full map →</Link>
+          </div>
+          <WorldMap mini />
+        </section>
+        <div className="space-y-4">
+          <NextPassWidget />
+          <SpaceWeatherPanel />
+        </div>
       </div>
 
       <PageHeader title="At a glance" />
