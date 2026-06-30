@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { unlink } from 'node:fs/promises';
 import { indexVideo, removeDoc } from '@/server/search';
 import { classify } from '@/lib/topics';
+import { saveProgress } from '@/server/videos/progress';
 
 const addSchema = z.object({ url: z.string().url() });
 
@@ -80,10 +81,7 @@ export async function deleteVideoAction(id: string) {
 }
 
 export async function updateProgressAction(id: string, seconds: number) {
-  db.update(videos)
-    .set({ progressS: Math.max(0, Math.floor(seconds)), watchedAt: Math.floor(Date.now() / 1000) })
-    .where(eq(videos.id, id))
-    .run();
+  saveProgress(id, seconds);
 }
 
 export async function setVideoTopicsAction(id: string, topics: string[]) {

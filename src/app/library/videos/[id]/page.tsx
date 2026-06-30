@@ -58,10 +58,13 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
 
       <details className="mt-6 rounded-xl border border-border bg-surface p-4">
         <summary className="cursor-pointer font-medium">Keyboard shortcuts</summary>
+        <p className="mt-2 text-xs text-muted">Click the player first so these don’t interfere with the rest of the page.</p>
         <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
           <dt className="font-mono">Space / K</dt><dd>Play / pause</dd>
+          <dt className="font-mono">J / L</dt><dd>Seek ±10 s</dd>
           <dt className="font-mono">← / →</dt><dd>Seek ±5 s</dd>
           <dt className="font-mono">↑ / ↓</dt><dd>Volume ±10%</dd>
+          <dt className="font-mono">0–9</dt><dd>Jump to 0–90%</dd>
           <dt className="font-mono">M</dt><dd>Mute</dd>
           <dt className="font-mono">C</dt><dd>Toggle captions</dd>
           <dt className="font-mono">F</dt><dd>Fullscreen</dd>

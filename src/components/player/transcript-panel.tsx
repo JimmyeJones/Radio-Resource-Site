@@ -21,8 +21,10 @@ export function TranscriptPanel({ videoId, hasSubs, bookmarks }: { videoId: stri
   const [cues, setCues] = useState<Cue[] | null>(null);
   const [tab, setTab] = useState<'bookmarks' | 'transcript'>(bookmarks.length || !hasSubs ? 'bookmarks' : 'transcript');
   const [label, setLabel] = useState('');
+  const [active, setActive] = useState(-1);
   const [pending, start] = useTransition();
   const loaded = useRef(false);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (tab === 'transcript' && !loaded.current && hasSubs) {
@@ -33,6 +35,33 @@ export function TranscriptPanel({ videoId, hasSubs, bookmarks }: { videoId: stri
         .catch(() => setCues([]));
     }
   }, [tab, hasSubs, videoId]);
+
+  // Follow the playhead: highlight the active cue (binary search on start time).
+  useEffect(() => {
+    if (!cues || cues.length === 0) return;
+    return playerBus.onTime((t) => {
+      let lo = 0;
+      let hi = cues.length - 1;
+      let idx = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (cues[mid].start <= t) {
+          idx = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      setActive((prev) => (prev === idx ? prev : idx));
+    });
+  }, [cues]);
+
+  // Keep the active cue in view while it plays (without yanking the whole page).
+  useEffect(() => {
+    if (active < 0 || tab !== 'transcript') return;
+    const node = listRef.current?.querySelector<HTMLElement>(`[data-cue="${active}"]`);
+    node?.scrollIntoView({ block: 'nearest' });
+  }, [active, tab]);
 
   function addBookmark() {
     const t = playerBus.getTime?.() ?? 0;
@@ -106,15 +135,19 @@ export function TranscriptPanel({ videoId, hasSubs, bookmarks }: { videoId: stri
           ) : cues.length === 0 ? (
             <p className="text-sm text-muted">No transcript available.</p>
           ) : (
-            <ul className="space-y-0.5">
+            <ul ref={listRef} className="space-y-0.5">
               {cues.map((c, i) => (
                 <li key={i}>
                   <button
                     type="button"
+                    data-cue={i}
+                    aria-current={i === active ? 'true' : undefined}
                     onClick={() => playerBus.seek?.(c.start)}
-                    className="flex w-full gap-3 rounded px-2 py-1 text-left text-sm hover:bg-elevated"
+                    className={`flex w-full gap-3 rounded px-2 py-1 text-left text-sm transition-colors ${
+                      i === active ? 'bg-accent/15 text-fg ring-1 ring-accent/30' : 'hover:bg-elevated'
+                    }`}
                   >
-                    <span className="shrink-0 font-mono text-xs text-accent">{fmt(c.start)}</span>
+                    <span className={`shrink-0 font-mono text-xs ${i === active ? 'text-accent' : 'text-accent/80'}`}>{fmt(c.start)}</span>
                     <span>{c.text}</span>
                   </button>
                 </li>
