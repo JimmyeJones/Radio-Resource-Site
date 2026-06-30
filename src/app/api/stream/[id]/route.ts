@@ -4,6 +4,7 @@ import { videos } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { createReadStream, statSync } from 'node:fs';
 import type { ReadStream } from 'node:fs';
+import { parseRangeHeader } from '@/server/http-range';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,17 +23,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const range = req.headers.get('range');
   const contentType = 'video/mp4';
 
-  if (range) {
-    const m = /bytes=(\d*)-(\d*)/.exec(range);
-    if (!m) return new Response('bad range', { status: 416 });
-    const start = m[1] ? Number(m[1]) : 0;
-    const end = m[2] ? Number(m[2]) : size - 1;
-    if (start >= size || end >= size) {
-      return new Response('range not satisfiable', {
-        status: 416,
-        headers: { 'Content-Range': `bytes */${size}` },
-      });
-    }
+  const parsed = parseRangeHeader(range, size);
+  if (parsed.type === 'unsatisfiable') {
+    return new Response('range not satisfiable', {
+      status: 416,
+      headers: { 'Content-Range': `bytes */${size}` },
+    });
+  }
+
+  if (parsed.type === 'range') {
+    const { start, end } = parsed;
     const stream = createReadStream(v.filePath, { start, end });
     return new Response(toWebStream(stream), {
       status: 206,
