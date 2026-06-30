@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { gridToLatLon, latLonToGrid } from '@/lib/tools/satellites';
-import { predictPasses } from '@/server/satellites/passes';
+import { predictPasses, buildIcs, azimuthCompass, type SatPass } from '@/server/satellites/passes';
 import { parseTleBlock } from '@/server/satellites/parse';
 
 describe('Maidenhead grid conversion', () => {
@@ -43,5 +43,47 @@ describe('pass prediction', () => {
     };
     const result = predictPasses(tle, { lat: 40, lon: -74 }, 24, new Date('2024-01-10T00:00:00Z'));
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe('ICS export', () => {
+  const pass: SatPass = {
+    satellite: 'OBJECT A, B; test',
+    norad: 99999,
+    aos: 1704844800,
+    los: 1704845400,
+    maxElevationDeg: 42,
+    maxElevationAt: 1704845100,
+    durationS: 600,
+    startAzimuthDeg: 90,
+    endAzimuthDeg: 270,
+  };
+
+  it('produces a well-formed VCALENDAR', () => {
+    const ics = buildIcs([pass]);
+    expect(ics.startsWith('BEGIN:VCALENDAR')).toBe(true);
+    expect(ics.trimEnd().endsWith('END:VCALENDAR')).toBe(true);
+    expect(ics).toContain('BEGIN:VEVENT');
+    expect(ics).toContain('UID:99999-1704844800@radio-resource');
+    // CRLF line endings per RFC 5545.
+    expect(ics).toContain('\r\n');
+  });
+
+  it('escapes TEXT special characters in the summary', () => {
+    const ics = buildIcs([pass]);
+    // Commas and semicolons in the satellite name must be backslash-escaped
+    // so they are not parsed as ICS value/parameter separators.
+    expect(ics).toContain('SUMMARY:OBJECT A\\, B\\; test pass');
+    expect(ics).not.toContain('SUMMARY:OBJECT A, B; test');
+  });
+});
+
+describe('azimuthCompass', () => {
+  it('maps degrees to the nearest 8-point compass direction', () => {
+    expect(azimuthCompass(0)).toBe('N');
+    expect(azimuthCompass(90)).toBe('E');
+    expect(azimuthCompass(180)).toBe('S');
+    expect(azimuthCompass(270)).toBe('W');
+    expect(azimuthCompass(360)).toBe('N');
   });
 });

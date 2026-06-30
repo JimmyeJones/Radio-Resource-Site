@@ -102,6 +102,16 @@ export function azimuthCompass(deg: number): string {
   return dirs[Math.round(deg / 45) % 8];
 }
 
+// Escape a value for an ICS TEXT field per RFC 5545 §3.3.11
+// (backslash, semicolon, comma, and newlines must be escaped).
+function icsText(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r\n|\r|\n/g, '\\n');
+}
+
 export function buildIcs(passes: SatPass[]): string {
   const lines = [
     'BEGIN:VCALENDAR',
@@ -116,8 +126,8 @@ export function buildIcs(passes: SatPass[]): string {
       `DTSTAMP:${ics(p.aos)}`,
       `DTSTART:${ics(p.aos)}`,
       `DTEND:${ics(p.los)}`,
-      `SUMMARY:${p.satellite} pass · max ${p.maxElevationDeg.toFixed(0)}°`,
-      `DESCRIPTION:AOS ${azimuthCompass(p.startAzimuthDeg)} · LOS ${azimuthCompass(p.endAzimuthDeg)} · ${p.durationS}s`,
+      `SUMMARY:${icsText(`${p.satellite} pass · max ${p.maxElevationDeg.toFixed(0)}°`)}`,
+      `DESCRIPTION:${icsText(`AOS ${azimuthCompass(p.startAzimuthDeg)} · LOS ${azimuthCompass(p.endAzimuthDeg)} · ${p.durationS}s`)}`,
       'END:VEVENT',
     );
   }
