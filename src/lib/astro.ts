@@ -9,7 +9,7 @@ export interface SubSolar {
   lon: number; // subsolar longitude, degrees (−180..180)
 }
 
-/** Days since the J2000.0 epoch (2000-01-01 12:00 UTC). */
+/** Julian centuries since the J2000.0 epoch (2000-01-01 12:00 UTC). */
 function julianCenturies(date: Date): number {
   const jd = date.getTime() / 86400000 + 2440587.5;
   return (jd - 2451545.0) / 36525;
