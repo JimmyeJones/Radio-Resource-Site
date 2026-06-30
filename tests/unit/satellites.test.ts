@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { gridToLatLon, latLonToGrid } from '@/lib/tools/satellites';
-import { predictPasses } from '@/server/satellites/passes';
+import { predictPasses, buildIcs, type SatPass } from '@/server/satellites/passes';
 import { parseTleBlock } from '@/server/satellites/parse';
 
 describe('Maidenhead grid conversion', () => {
@@ -43,5 +43,35 @@ describe('pass prediction', () => {
     };
     const result = predictPasses(tle, { lat: 40, lon: -74 }, 24, new Date('2024-01-10T00:00:00Z'));
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe('ICS calendar export', () => {
+  const pass: SatPass = {
+    satellite: 'METEOR-M2 3, OBJECT',
+    norad: 57166,
+    aos: 1704931200,
+    los: 1704931800,
+    maxElevationDeg: 42,
+    maxElevationAt: 1704931500,
+    durationS: 600,
+    startAzimuthDeg: 90,
+    endAzimuthDeg: 270,
+  };
+
+  it('escapes reserved TEXT characters in the satellite name', () => {
+    const ics = buildIcs([pass]);
+    // The comma in the name must be backslash-escaped so the SUMMARY value is not
+    // split into multiple structured values by a calendar parser.
+    expect(ics).toContain('SUMMARY:METEOR-M2 3\\, OBJECT pass');
+    expect(ics).not.toMatch(/SUMMARY:[^\n]*[^\\], OBJECT/);
+  });
+
+  it('produces a well-formed VCALENDAR wrapper', () => {
+    const ics = buildIcs([pass]);
+    expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
+    expect(ics.endsWith('END:VCALENDAR')).toBe(true);
+    expect(ics).toContain('BEGIN:VEVENT');
+    expect(ics).toContain('END:VEVENT');
   });
 });
