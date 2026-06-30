@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Badge } from './ui/badge';
 
 interface JobRow {
@@ -14,6 +15,8 @@ interface JobRow {
 
 export function JobFeed() {
   const [rows, setRows] = useState<JobRow[]>([]);
+  const router = useRouter();
+  const prevStatus = useRef<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -22,7 +25,15 @@ export function JobFeed() {
         const res = await fetch('/api/jobs', { cache: 'no-store' });
         if (!res.ok) return;
         const data = (await res.json()) as JobRow[];
-        if (!cancelled) setRows(data);
+        if (cancelled) return;
+        // When a job finishes, refresh server components so the new video /
+        // article / etc. appears in the list without a manual reload.
+        const finished = data.some(
+          (j) => j.status === 'completed' && prevStatus.current[j.id] && prevStatus.current[j.id] !== 'completed',
+        );
+        prevStatus.current = Object.fromEntries(data.map((j) => [j.id, j.status]));
+        setRows(data);
+        if (finished) router.refresh();
       } catch { /* noop */ }
     }
     tick();
@@ -31,7 +42,7 @@ export function JobFeed() {
       cancelled = true;
       clearInterval(id);
     };
-  }, []);
+  }, [router]);
 
   if (rows.length === 0) return null;
   return (
