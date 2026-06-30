@@ -190,6 +190,14 @@ export function searchIndexCount(): number {
   return row?.n ?? 0;
 }
 
+// bm25() weights are positional, one per FTS5 column in schema order:
+// doc_type, doc_id, url (all UNINDEXED), then title and body. Lower (more
+// negative) bm25 scores rank first, so boosting title gives title matches a
+// stronger pull than body matches. The leading three weights cover the
+// UNINDEXED columns and must be present for the title weight to land on the
+// title column.
+export const FTS_BM25_WEIGHTS = [1, 1, 1, 5, 1] as const;
+
 export function search(query: string, limit = 50): SearchHit[] {
   const q = query.trim();
   if (!q) return [];
@@ -202,7 +210,7 @@ export function search(query: string, limit = 50): SearchHit[] {
                 snippet(search_index, 4, '[', ']', ' … ', 12) AS snippet
          FROM search_index
          WHERE search_index MATCH ?
-         ORDER BY bm25(search_index, 5.0, 1.0)
+         ORDER BY bm25(search_index, ${FTS_BM25_WEIGHTS.join(', ')})
          LIMIT ?`,
       )
       .all(match, limit) as SearchHit[];
