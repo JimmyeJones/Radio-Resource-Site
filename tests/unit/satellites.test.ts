@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { gridToLatLon, latLonToGrid } from '@/lib/tools/satellites';
-import { predictPasses } from '@/server/satellites/passes';
+import { predictPasses, azimuthCompass, buildIcs, type SatPass } from '@/server/satellites/passes';
 import { parseTleBlock } from '@/server/satellites/parse';
 
 describe('Maidenhead grid conversion', () => {
@@ -43,5 +43,58 @@ describe('pass prediction', () => {
     };
     const result = predictPasses(tle, { lat: 40, lon: -74 }, 24, new Date('2024-01-10T00:00:00Z'));
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe('azimuthCompass', () => {
+  it('maps degrees to the nearest 8-point compass heading', () => {
+    expect(azimuthCompass(0)).toBe('N');
+    expect(azimuthCompass(45)).toBe('NE');
+    expect(azimuthCompass(90)).toBe('E');
+    expect(azimuthCompass(180)).toBe('S');
+    expect(azimuthCompass(270)).toBe('W');
+  });
+
+  it('wraps headings near 360° back to N', () => {
+    expect(azimuthCompass(350)).toBe('N');
+    expect(azimuthCompass(360)).toBe('N');
+  });
+});
+
+describe('buildIcs', () => {
+  const pass: SatPass = {
+    satellite: 'ISS (ZARYA)',
+    norad: 25544,
+    aos: 1704931200, // 2024-01-11T00:00:00Z
+    los: 1704931800, // 2024-01-11T00:10:00Z
+    maxElevationDeg: 42.6,
+    maxElevationAt: 1704931500,
+    durationS: 600,
+    startAzimuthDeg: 10,
+    endAzimuthDeg: 200,
+  };
+
+  it('wraps events in a valid VCALENDAR envelope with CRLF line endings', () => {
+    const ics = buildIcs([pass]);
+    expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
+    expect(ics.endsWith('END:VCALENDAR')).toBe(true);
+    expect(ics).toContain('\r\n');
+    expect(ics).not.toContain('\n\n');
+  });
+
+  it('emits one VEVENT per pass with UTC start/end times and a stable UID', () => {
+    const ics = buildIcs([pass]);
+    expect(ics).toContain('BEGIN:VEVENT');
+    expect(ics).toContain('UID:25544-1704931200@radio-resource');
+    expect(ics).toContain('DTSTART:20240111T000000Z');
+    expect(ics).toContain('DTEND:20240111T001000Z');
+    expect(ics).toContain('SUMMARY:ISS (ZARYA) pass · max 43°');
+  });
+
+  it('produces a header-only calendar when there are no passes', () => {
+    const ics = buildIcs([]);
+    expect(ics).not.toContain('BEGIN:VEVENT');
+    expect(ics).toContain('BEGIN:VCALENDAR');
+    expect(ics).toContain('END:VCALENDAR');
   });
 });
