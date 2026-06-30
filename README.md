@@ -108,11 +108,26 @@ brew install yt-dlp ffmpeg
 sudo apt install yt-dlp ffmpeg
 ```
 
-> **Downloads failing with `HTTP Error 403: Forbidden`?** That almost always
-> means `yt-dlp` is out of date — YouTube changes break older versions. Update
-> it (`yt-dlp -U`, `pip install -U yt-dlp`, or `brew upgrade yt-dlp`). The Docker
-> image installs the latest release at build time, so on the NAS just rebuild:
-> `docker compose up -d --build`.
+> **Downloads failing with `HTTP Error 403: Forbidden`?** First, make sure
+> `yt-dlp` is current — YouTube changes break older versions. The Docker image
+> installs the latest release at build time, so on the NAS rebuild first:
+> `docker compose up -d --build` (locally: `yt-dlp -U` / `pip install -U yt-dlp`).
+>
+> If it still 403s after updating, YouTube is bot-gating the download. Three
+> optional env vars (honored by both the web and worker containers, no rebuild
+> needed — just `docker compose up -d` after setting them) work around it:
+>
+> | Env var | What it does | Example |
+> |---|---|---|
+> | `YTDLP_COOKIES` | Path to a Netscape `cookies.txt` from a signed-in browser. **Most reliable fix.** Drop the file in your media dir (already mounted at `/media`). | `/media/cookies.txt` |
+> | `YTDLP_PLAYER_CLIENT` | Use an alternate YouTube client. | `android` or `tv` |
+> | `YTDLP_EXTRA_ARGS` | Any extra yt-dlp flags. | `--force-ipv4` |
+>
+> Export a `cookies.txt` with a browser extension (e.g. "Get cookies.txt
+> LOCALLY"), copy it into your media dataset, then:
+> ```sh
+> YTDLP_COOKIES=/media/cookies.txt docker compose up -d
+> ```
 
 The SQLite database is created lazily at `./data/app.db`; media goes under `./media/`. Both are git-ignored.
 

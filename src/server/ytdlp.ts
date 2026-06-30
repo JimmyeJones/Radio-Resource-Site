@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 export interface YtDlpInfo {
   id: string;
@@ -14,8 +15,26 @@ export interface YtDlpInfo {
 
 const BIN = process.env.YT_DLP ?? 'yt-dlp';
 
+/**
+ * Args applied to every yt-dlp call, driven by optional env vars so YouTube
+ * bot-detection (HTTP 403) can be worked around without a rebuild:
+ *   YTDLP_COOKIES        path to a Netscape cookies.txt (e.g. /media/cookies.txt)
+ *   YTDLP_PLAYER_CLIENT  yt-dlp youtube player_client, e.g. "android" or "tv"
+ *   YTDLP_EXTRA_ARGS     any extra space-separated flags (e.g. "--force-ipv4")
+ */
+export function commonArgs(): string[] {
+  const args: string[] = [];
+  const cookies = process.env.YTDLP_COOKIES;
+  if (cookies && existsSync(cookies)) args.push('--cookies', cookies);
+  const client = process.env.YTDLP_PLAYER_CLIENT;
+  if (client) args.push('--extractor-args', `youtube:player_client=${client}`);
+  const extra = process.env.YTDLP_EXTRA_ARGS?.trim();
+  if (extra) args.push(...extra.split(/\s+/));
+  return args;
+}
+
 export async function fetchInfo(url: string): Promise<YtDlpInfo> {
-  return await runJson(['--no-warnings', '--skip-download', '-J', url]);
+  return await runJson([...commonArgs(), '--no-warnings', '--skip-download', '-J', url]);
 }
 
 export interface DownloadOptions {
@@ -33,6 +52,7 @@ export async function downloadVideo(opts: DownloadOptions): Promise<{ filePath: 
   const heightFilter = opts.maxHeight ? `[height<=${opts.maxHeight}]` : '';
   const fmt = opts.formatCode ?? `bv*${heightFilter}+ba/b${heightFilter}`;
   const args = [
+    ...commonArgs(),
     '--no-warnings',
     '--no-playlist',
     '-f',

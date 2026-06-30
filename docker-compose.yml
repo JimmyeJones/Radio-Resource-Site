@@ -10,6 +10,10 @@ services:
       DATABASE_PATH: /data/app.db
       MEDIA_DIR: /media
       NODE_ENV: production
+      # Optional yt-dlp 403 workarounds (see README). Unset = ignored.
+      YTDLP_COOKIES: ${YTDLP_COOKIES:-}
+      YTDLP_PLAYER_CLIENT: ${YTDLP_PLAYER_CLIENT:-}
+      YTDLP_EXTRA_ARGS: ${YTDLP_EXTRA_ARGS:-}
     volumes:
       - data:/data
       - media:/media
@@ -31,6 +35,10 @@ services:
       DATABASE_PATH: /data/app.db
       MEDIA_DIR: /media
       NODE_ENV: production
+      # Optional yt-dlp 403 workarounds (see README). Unset = ignored.
+      YTDLP_COOKIES: ${YTDLP_COOKIES:-}
+      YTDLP_PLAYER_CLIENT: ${YTDLP_PLAYER_CLIENT:-}
+      YTDLP_EXTRA_ARGS: ${YTDLP_EXTRA_ARGS:-}
     volumes:
       - data:/data
       - media:/media
