@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile || pnpm install
 
 COPY . .
-RUN pnpm build && pnpm exec tsc -p tsconfig.worker.json
+RUN pnpm build && pnpm build:worker
 
 FROM node:20-slim AS runner
 WORKDIR /app
