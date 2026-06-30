@@ -37,4 +37,11 @@ describe('callsign prefix lookup', () => {
     expect(parsePrefix('JA1XYZ')).toBe('JA1');
     expect(parsePrefix('2E0ABC')).toBe('2E0');
   });
+
+  it('parsePrefix strips trailing portable suffixes', () => {
+    expect(parsePrefix('K6UDA/P')).toBe('K6');
+    expect(parsePrefix('W1AW/M')).toBe('W1');
+    expect(parsePrefix('VE3ABC/MM')).toBe('VE3');
+    expect(parsePrefix('DL1ABC/QRP')).toBe('DL1');
+  });
 });
