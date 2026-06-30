@@ -28,8 +28,15 @@ ENV DATABASE_PATH=/data/app.db
 ENV MEDIA_DIR=/media
 ENV PORT=3000
 
+# Debian's apt yt-dlp lags months behind and YouTube breaks old versions with
+# "HTTP Error 403: Forbidden". Install the latest self-contained release binary
+# instead (bundles its own Python); rebuilding the image refreshes it.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    yt-dlp ffmpeg ca-certificates \
+    ffmpeg ca-certificates wget \
+  && wget -qO /usr/local/bin/yt-dlp \
+       https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux \
+  && chmod a+rx /usr/local/bin/yt-dlp \
+  && apt-get purge -y wget && apt-get autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
 # One complete prod node_modules (with the .pnpm store) serves both the web

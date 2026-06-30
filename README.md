@@ -108,6 +108,12 @@ brew install yt-dlp ffmpeg
 sudo apt install yt-dlp ffmpeg
 ```
 
+> **Downloads failing with `HTTP Error 403: Forbidden`?** That almost always
+> means `yt-dlp` is out of date — YouTube changes break older versions. Update
+> it (`yt-dlp -U`, `pip install -U yt-dlp`, or `brew upgrade yt-dlp`). The Docker
+> image installs the latest release at build time, so on the NAS just rebuild:
+> `docker compose up -d --build`.
+
 The SQLite database is created lazily at `./data/app.db`; media goes under `./media/`. Both are git-ignored.
 
 ## Adding to the hub
