@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { updateProgressAction } from '@/server/actions/videos';
+import { playerBus } from './player-bus';
 
 interface Props {
   videoId: string;
@@ -31,6 +32,13 @@ export function VideoPlayer({ videoId, hasSubs, initialProgress, title }: Props)
       }
     };
     el.addEventListener('timeupdate', onTime);
+
+    // Expose seek/current-time to sibling transcript & bookmark controls.
+    playerBus.seek = (s: number) => {
+      el.currentTime = s;
+      void el.play().catch(() => undefined);
+    };
+    playerBus.getTime = () => el.currentTime;
 
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
@@ -68,6 +76,8 @@ export function VideoPlayer({ videoId, hasSubs, initialProgress, title }: Props)
     return () => {
       el.removeEventListener('timeupdate', onTime);
       document.removeEventListener('keydown', onKey);
+      playerBus.seek = null;
+      playerBus.getTime = null;
     };
   }, [initialProgress, videoId]);
 

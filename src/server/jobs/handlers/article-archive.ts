@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import type { ProgressFn } from './index';
+import { indexArticle } from '@/server/search';
 
 interface Payload {
   url: string;
@@ -60,5 +61,6 @@ export async function runArticleArchive(job: Job, onProgress: ProgressFn) {
   } else {
     db.insert(articles).values(row).run();
   }
+  indexArticle(row.id);
   onProgress(100, `saved ${extracted.wordCount} words`);
 }

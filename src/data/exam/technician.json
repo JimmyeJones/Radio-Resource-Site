@@ -1,0 +1,22 @@
+{
+  "pool": "technician",
+  "label": "Technician (starter set)",
+  "note": "A small starter set of representative questions. Drop the full NCVEC pool JSON in this folder to expand it.",
+  "questions": [
+    { "id": "T1A01", "question": "Which agency regulates and enforces the rules for the Amateur Radio Service in the US?", "answers": ["FEMA", "Homeland Security", "The FCC", "The ITU"], "correct": 2 },
+    { "id": "T1B03", "question": "Which frequency is in the 6 meter amateur band?", "answers": ["49.00 MHz", "52.525 MHz", "28.50 MHz", "222.15 MHz"], "correct": 1 },
+    { "id": "T1C01", "question": "What type of call sign has a single letter in both the prefix and suffix?", "answers": ["Vanity", "Special event", "Sequential", "In-memoriam"], "correct": 1 },
+    { "id": "T2A01", "question": "What is the most common repeater frequency offset in the 2 meter band?", "answers": ["Plus or minus 5 MHz", "Plus or minus 600 kHz", "Plus or minus 500 kHz", "Plus or minus 1 MHz"], "correct": 1 },
+    { "id": "T2B01", "question": "How is FM-phone emission usually transmitted on VHF/UHF?", "answers": ["Upper sideband", "Lower sideband", "Frequency modulation", "Pulse modulation"], "correct": 2 },
+    { "id": "T3A01", "question": "Why might the range of VHF/UHF signals vary as you move around obstructions?", "answers": ["Multipath propagation", "Wind speed", "Battery voltage", "Sunspots"], "correct": 0 },
+    { "id": "T4A02", "question": "What could be used to cure distorted audio caused by RF on a transmitter ground lead?", "answers": ["Bigger antenna", "A ferrite choke", "A larger power supply", "A longer feedline"], "correct": 1 },
+    { "id": "T5A01", "question": "Electrical current is measured in which units?", "answers": ["Volts", "Watts", "Ohms", "Amperes"], "correct": 3 },
+    { "id": "T5C09", "question": "What is the formula used to calculate electrical power (P) in a DC circuit?", "answers": ["P = E divided by I", "P = E times I", "P = E minus I", "P = E plus I"], "correct": 1 },
+    { "id": "T6A01", "question": "What electrical component opposes the flow of current in a DC circuit?", "answers": ["Inductor", "Resistor", "Voltmeter", "Battery"], "correct": 1 },
+    { "id": "T7A01", "question": "Which term describes a device that combines several semiconductors into one package?", "answers": ["Transformer", "Integrated circuit", "Crystal", "Dummy load"], "correct": 1 },
+    { "id": "T8A01", "question": "Which emission mode has the narrowest bandwidth?", "answers": ["FM voice", "SSB voice", "CW", "Slow-scan TV"], "correct": 2 },
+    { "id": "T9A01", "question": "What is a beam antenna?", "answers": ["An omnidirectional antenna", "An antenna that concentrates signals in one direction", "An antenna for receiving only", "A random-length wire"], "correct": 1 },
+    { "id": "T0A01", "question": "Which is a safety hazard of a 12-volt storage battery?", "answers": ["Touching it causes electrocution", "Shorting the terminals can cause burns, fire, or explosion", "RF burns", "None, they are safe"], "correct": 1 },
+    { "id": "T0C01", "question": "What type of radiation are radio signals?", "answers": ["Ionizing", "Non-ionizing", "Alpha", "Gamma"], "correct": 1 }
+  ]
+}

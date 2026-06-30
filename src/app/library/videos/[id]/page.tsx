@@ -1,25 +1,40 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/db/client';
-import { videos } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { videos, videoBookmarks } from '@/db/schema';
+import { eq, asc } from 'drizzle-orm';
 import { VideoPlayer } from '@/components/player/video-player';
+import { TranscriptPanel } from '@/components/player/transcript-panel';
 import { formatDate, formatDuration } from '@/lib/format';
 import { DeleteVideoButton } from '@/components/delete-video-button';
+import { TopicEditor } from '@/components/topic-editor';
+import { WatchLaterButton } from '@/components/watch-later-button';
+import { AddToProject } from '@/components/add-to-project';
+import { listProjectsLite } from '@/server/actions/projects';
 
 export const dynamic = 'force-dynamic';
 
-export default function VideoPage({ params }: { params: { id: string } }) {
+export default async function VideoPage({ params }: { params: { id: string } }) {
   const v = db.select().from(videos).where(eq(videos.id, params.id)).get();
   if (!v) notFound();
+  const projects = await listProjectsLite();
+  const bookmarks = db
+    .select()
+    .from(videoBookmarks)
+    .where(eq(videoBookmarks.videoId, v.id))
+    .orderBy(asc(videoBookmarks.tSeconds))
+    .all();
 
   return (
     <article>
-      <VideoPlayer
-        videoId={v.id}
-        hasSubs={Boolean(v.subsPath)}
-        initialProgress={v.progressS}
-        title={v.title}
-      />
+      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
+        <VideoPlayer
+          videoId={v.id}
+          hasSubs={Boolean(v.subsPath)}
+          initialProgress={v.progressS}
+          title={v.title}
+        />
+        <TranscriptPanel videoId={v.id} hasSubs={Boolean(v.subsPath)} bookmarks={bookmarks} />
+      </div>
 
       <header className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex-1">
@@ -30,8 +45,16 @@ export default function VideoPage({ params }: { params: { id: string } }) {
             {v.durationS ? ` · ${formatDuration(v.durationS)}` : ''}
           </p>
         </div>
-        <DeleteVideoButton id={v.id} />
+        <div className="flex flex-wrap items-center gap-2">
+          <WatchLaterButton videoId={v.id} initial={v.watchLater} />
+          <AddToProject itemType="video" itemId={v.id} projects={projects} />
+          <DeleteVideoButton id={v.id} />
+        </div>
       </header>
+
+      <div className="mt-4">
+        <TopicEditor videoId={v.id} initial={v.topics ?? []} />
+      </div>
 
       <details className="mt-6 rounded-xl border border-border bg-surface p-4">
         <summary className="cursor-pointer font-medium">Keyboard shortcuts</summary>

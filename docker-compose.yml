@@ -3,7 +3,7 @@ services:
     build: .
     image: radio-resource-site:latest
     container_name: radio-web
-    command: ["node", "server.js"]
+    command: ["node_modules/.bin/next", "start"]
     ports:
       - "3000:3000"
     environment:
@@ -21,6 +21,7 @@ services:
       retries: 5
 
   worker:
+    build: .
     image: radio-resource-site:latest
     container_name: radio-worker
     depends_on:

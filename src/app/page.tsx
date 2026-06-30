@@ -1,44 +1,56 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { db } from '@/db/client';
-import { videos, articles, hubItems } from '@/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { videos, articles, hubItems, projects, settings } from '@/db/schema';
+import { desc, eq, sql } from 'drizzle-orm';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JobFeed } from '@/components/job-feed';
+import { NextPassWidget } from '@/components/next-pass-widget';
+import { SpaceWeatherPanel } from '@/components/space-weather-panel';
+import { WorldMap } from '@/components/world-map';
+import { HeroClock } from '@/components/hero-clock';
 import { formatRelative, formatDuration } from '@/lib/format';
-import { Radio, Library, BookmarkPlus, Wrench, ArrowRight } from 'lucide-react';
+import { Radio, Library, Wrench, ArrowRight, FolderKanban, Globe } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default function Dashboard() {
+  const s = db.select().from(settings).where(eq(settings.id, 1)).get();
+  if (s && !s.setupComplete) redirect('/setup');
+
   const recentVideos = db.select().from(videos).orderBy(desc(videos.addedAt)).limit(4).all();
   const recentArticles = db.select().from(articles).orderBy(desc(articles.archivedAt)).limit(4).all();
   const counts = {
     videos: db.select({ n: sql<number>`count(*)` }).from(videos).get()?.n ?? 0,
     articles: db.select({ n: sql<number>`count(*)` }).from(articles).get()?.n ?? 0,
     hub: db.select({ n: sql<number>`count(*)` }).from(hubItems).get()?.n ?? 0,
+    projects: db.select({ n: sql<number>`count(*)` }).from(projects).get()?.n ?? 0,
   };
 
   return (
     <div>
-      <section className="mb-10 rounded-2xl border border-border bg-gradient-to-br from-surface to-elevated p-8">
+      <section className="aurora rise-in mb-8 rounded-3xl border border-border bg-surface/60 p-8 sm:p-10">
         <div className="flex items-start gap-4">
-          <span className="rounded-xl bg-accent/15 p-3 text-accent">
+          <span className="rounded-2xl bg-accent/15 p-3 text-accent ring-1 ring-accent/20">
             <Radio className="h-7 w-7" aria-hidden />
           </span>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Your distraction-free radio library
+          <div className="min-w-0">
+            <p className="text-sm font-medium uppercase tracking-widest text-accent">Mission Control</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Your <span className="text-gradient">radio universe</span>, all in one place
             </h1>
             <p className="mt-2 max-w-2xl text-muted">
-              Ham radio, satellites, radio astronomy, SDR. Local downloads, clean reader, curated
-              hub, and interactive tools — no ads, no autoplay-next, no algorithm.
+              Ham radio, satellites, SDR, and PCB work — local, ad-free, and offline. Press{' '}
+              <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 text-xs">⌘K</kbd> to jump anywhere.
             </p>
+            <div className="mt-4"><HeroClock grid={s?.qthGrid ?? null} /></div>
             <div className="mt-5 flex flex-wrap gap-2">
-              <QuickLink href="/library/videos" Icon={Library}>Open library</QuickLink>
-              <QuickLink href="/hub" Icon={BookmarkPlus}>Resource hub</QuickLink>
-              <QuickLink href="/tools" Icon={Wrench}>Reference tools</QuickLink>
+              <QuickLink href="/map" Icon={Globe}>Live map</QuickLink>
+              <QuickLink href="/library/videos" Icon={Library}>Library</QuickLink>
+              <QuickLink href="/projects" Icon={FolderKanban}>Projects</QuickLink>
+              <QuickLink href="/tools" Icon={Wrench}>Tools</QuickLink>
             </div>
           </div>
         </div>
@@ -46,10 +58,27 @@ export default function Dashboard() {
 
       <JobFeed />
 
+      <div className="mb-8 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+        <section aria-label="Live world map">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
+              <Globe className="h-4 w-4" aria-hidden /> Live map
+            </h2>
+            <Link href="/map" className="text-xs text-accent hover:underline">Full map →</Link>
+          </div>
+          <WorldMap mini />
+        </section>
+        <div className="space-y-4">
+          <NextPassWidget />
+          <SpaceWeatherPanel />
+        </div>
+      </div>
+
       <PageHeader title="At a glance" />
-      <div className="mb-10 grid gap-3 sm:grid-cols-3">
+      <div className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Videos" value={counts.videos} href="/library/videos" />
         <Stat label="Archived articles" value={counts.articles} href="/library/articles" />
+        <Stat label="Projects" value={counts.projects} href="/projects" />
         <Stat label="Hub entries" value={counts.hub} href="/hub" />
       </div>
 

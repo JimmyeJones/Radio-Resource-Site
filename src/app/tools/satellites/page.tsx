@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,10 +109,22 @@ export default function SatellitesPage() {
       </fieldset>
 
       {observer ? (
-        <p className="mb-4 text-sm text-muted">
+        <p className="mb-2 text-sm text-muted">
           Observer: {observer.lat.toFixed(3)}°, {observer.lon.toFixed(3)}°
         </p>
       ) : null}
+
+      <p className="mb-4 text-sm text-muted">
+        Details:{' '}
+        {DEFAULT_PRESETS.map((p, i) => (
+          <span key={p.norad}>
+            {i > 0 ? ' · ' : ''}
+            <Link href={`/tools/satellites/${p.norad}`} className="text-accent hover:underline">
+              {p.name}
+            </Link>
+          </span>
+        ))}
+      </p>
 
       {error ? (
         <Card className="border-warning/40 bg-warning/10 text-warning">

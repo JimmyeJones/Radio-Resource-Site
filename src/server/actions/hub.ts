@@ -5,6 +5,8 @@ import { db } from '@/db/client';
 import { hubItems } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { projectItems } from '@/db/schema';
+import { indexHubItem, removeDoc } from '@/server/search';
 
 const KINDS = ['channel', 'blog', 'reference', 'tool', 'podcast', 'forum', 'other'] as const;
 
@@ -37,6 +39,7 @@ export async function saveHubItemAction(formData: FormData) {
   if (!parse.success) return { ok: false, error: parse.error.issues.map((i) => i.message).join('; ') };
 
   const tags = parseTags(parse.data.tags ?? '');
+  const id = parse.data.id ?? randomUUID();
   if (parse.data.id) {
     db.update(hubItems)
       .set({
@@ -51,7 +54,7 @@ export async function saveHubItemAction(formData: FormData) {
   } else {
     db.insert(hubItems)
       .values({
-        id: randomUUID(),
+        id,
         title: parse.data.title,
         url: parse.data.url,
         description: parse.data.description ?? null,
@@ -60,12 +63,15 @@ export async function saveHubItemAction(formData: FormData) {
       })
       .run();
   }
+  indexHubItem(id);
   revalidatePath('/hub');
   return { ok: true };
 }
 
 export async function deleteHubItemAction(id: string) {
+  db.delete(projectItems).where(eq(projectItems.itemId, id)).run();
   db.delete(hubItems).where(eq(hubItems.id, id)).run();
+  removeDoc('hub', id);
   revalidatePath('/hub');
 }
 
@@ -103,9 +109,10 @@ export async function importHubAction(jsonText: string) {
     const kind = (typeof item.kind === 'string' && (KINDS as readonly string[]).includes(item.kind)
       ? (item.kind as (typeof KINDS)[number])
       : 'other');
+    const newId = randomUUID();
     db.insert(hubItems)
       .values({
-        id: randomUUID(),
+        id: newId,
         title: item.title,
         url: item.url,
         description: typeof item.description === 'string' ? item.description : null,
@@ -113,6 +120,7 @@ export async function importHubAction(jsonText: string) {
         tags: Array.isArray(item.tags) ? (item.tags as string[]).map(String) : [],
       })
       .run();
+    indexHubItem(newId);
     n++;
   }
   revalidatePath('/hub');

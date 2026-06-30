@@ -32,6 +32,7 @@ coverage/
 .vscode/
 .idea/
 
-# data and media (mounted volumes at runtime)
-data/
-media/
+# data and media (mounted volumes at runtime) — anchored to repo root so
+# bundled source data such as src/data/exam/*.json is still committed.
+/data/
+/media/

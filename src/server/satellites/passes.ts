@@ -25,7 +25,6 @@ export interface SatPass {
   endAzimuthDeg: number;
 }
 
-const TAU = Math.PI * 2;
 function radToDeg(r: number) { return (r * 180) / Math.PI; }
 function degToRad(d: number) { return (d * Math.PI) / 180; }
 
@@ -97,6 +96,59 @@ function interpZero(a: { t: number; elev: number }, b: { t: number; elev: number
   return { t: a.t + f * (b.t - a.t) };
 }
 
+const SPEED_OF_LIGHT = 299_792.458; // km/s
+
+export interface TrackPoint {
+  t: number; // unix seconds
+  az: number; // degrees
+  el: number; // degrees
+  rangeKm: number;
+  rangeRateKmS: number; // positive = receding
+}
+
+/** Sample az/el/range/range-rate across a single pass (default ~10 s steps). */
+export function passTrack(tle: TleInput, observer: Observer, pass: SatPass, stepS = 10): TrackPoint[] {
+  const satrec = sat.twoline2satrec(tle.line1, tle.line2);
+  if (!satrec || satrec.error) return [];
+  const obs = {
+    longitude: degToRad(observer.lon),
+    latitude: degToRad(observer.lat),
+    height: (observer.elevationM ?? 0) / 1000,
+  };
+
+  function look(atMs: number) {
+    const d = new Date(atMs);
+    const pv = sat.propagate(satrec, d);
+    if (!pv.position || typeof pv.position === 'boolean') return null;
+    const gmst = sat.gstime(d);
+    const ecf = sat.eciToEcf(pv.position, gmst);
+    const la = sat.ecfToLookAngles(obs, ecf);
+    return la;
+  }
+
+  const out: TrackPoint[] = [];
+  const dt = 1000; // 1 s for finite-difference range rate
+  for (let t = pass.aos; t <= pass.los; t += stepS) {
+    const a = look(t * 1000);
+    const b = look(t * 1000 + dt);
+    if (!a || !b) continue;
+    const rangeRate = ((b.rangeSat - a.rangeSat) * 1000) / dt; // km/s
+    out.push({
+      t,
+      az: (radToDeg(a.azimuth) + 360) % 360,
+      el: radToDeg(a.elevation),
+      rangeKm: a.rangeSat,
+      rangeRateKmS: rangeRate,
+    });
+  }
+  return out;
+}
+
+/** Doppler-shifted frequency (Hz) given a downlink frequency and range rate (km/s). */
+export function dopplerShiftHz(freqHz: number, rangeRateKmS: number): number {
+  return -freqHz * (rangeRateKmS / SPEED_OF_LIGHT);
+}
+
 export function azimuthCompass(deg: number): string {
   const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   return dirs[Math.round(deg / 45) % 8];
@@ -116,13 +168,23 @@ export function buildIcs(passes: SatPass[]): string {
       `DTSTAMP:${ics(p.aos)}`,
       `DTSTART:${ics(p.aos)}`,
       `DTEND:${ics(p.los)}`,
-      `SUMMARY:${p.satellite} pass · max ${p.maxElevationDeg.toFixed(0)}°`,
-      `DESCRIPTION:AOS ${azimuthCompass(p.startAzimuthDeg)} · LOS ${azimuthCompass(p.endAzimuthDeg)} · ${p.durationS}s`,
+      `SUMMARY:${escapeIcsText(`${p.satellite} pass · max ${p.maxElevationDeg.toFixed(0)}°`)}`,
+      `DESCRIPTION:${escapeIcsText(`AOS ${azimuthCompass(p.startAzimuthDeg)} · LOS ${azimuthCompass(p.endAzimuthDeg)} · ${p.durationS}s`)}`,
       'END:VEVENT',
     );
   }
   lines.push('END:VCALENDAR');
   return lines.join('\r\n');
+}
+
+// Escape a string for use as an iCalendar TEXT value (RFC 5545 §3.3.11):
+// backslash, comma, and semicolon are escaped; newlines become "\n".
+function escapeIcsText(text: string): string {
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r\n|\r|\n/g, '\\n');
 }
 
 function ics(unix: number): string {

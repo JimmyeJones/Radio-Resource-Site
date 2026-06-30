@@ -9,9 +9,18 @@ Built for [TrueNAS SCALE](https://www.truenas.com/truenas-scale/) (or any Docker
 - **Offline YouTube library** — paste a URL, the background worker pulls it with `yt-dlp`. Watch with HTTP range-request streaming, captions, and keyboard shortcuts. No ads, no autoplay-next.
 - **Channel subscriptions** — subscribe to a YouTube channel's RSS feed; new videos are detected on a 6-hour cron. Optional auto-download.
 - **Web article archiver** — Readability extraction + DOMPurify sanitization. Reader view with serif/sans, light/sepia/dark themes, font-size controls, reading progress.
+- **First-run setup wizard** — seeds a curated catalog of channels (dereksgc, Saveitforparts, Phil's Lab, EEVblog, …) and reference links you toggle on; add your own too. Re-runnable from Settings.
+- **Content filter** — downloaded videos are auto-tagged into topics (satellite, SDR, antenna, feed, PCB, ham, …) by keyword; filter the library with topic chips, or re-tag manually. "Backfill topics" re-classifies existing videos.
 - **Curated resource hub** — searchable, tag-filterable directory of channels, blogs, references, tools. URL metadata auto-fill. JSON export/import for backups.
+- **Project workspaces** — group videos, articles, hub links, and datasheets around a build (e.g. "L-band dish feed"), with a markdown notes/build-log.
+- **Watch-later queue** — flag videos to watch; they drop off once you start watching.
+- **Datasheet / PDF archiver** — fetch a datasheet by URL or upload a PDF; read it offline in an embedded viewer; link it to a project.
+- **Full-text search** — one search box across videos (including transcripts from the `.vtt` subtitles), articles, hub links, datasheets, and projects, backed by SQLite FTS5.
 - **Reference tools**
   - US Amateur band plan (interactive segments, license-class filter)
+  - **Antenna & feed calculator** (dipole/vertical lengths, dish gain & geometry, circular-waveguide/feed-horn cutoff, coax loss)
+  - **PCB calculator** (IPC-2221 trace current/width, microstrip/stripline impedance, via capacity)
+  - **RF link budget** (path loss, link budget, dBm/watt & VSWR/return-loss conversions)
   - Q-codes table (searchable)
   - NATO/ITU phonetic alphabet + callsign speller
   - Callsign prefix lookup (country, CQ/ITU zones, continent)
@@ -34,7 +43,35 @@ Storage layout in the container:
 | `/media/youtube/<channel>/...` | Downloaded videos + thumbnails + `.vtt` subtitles + `.info.json` |
 | `/media/articles/<id>/content.html` | Archived article body |
 
-## Deployment on TrueNAS SCALE
+## Quick install (one-liner)
+
+SSH into your NAS / Linux box (Docker required) and run:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/JimmyeJones/Radio-Resource-Site/claude/radio-content-web-app-7tby62/install.sh | bash
+```
+
+That clones the repo to `~/radio-resource-site`, builds the image, starts `web` + `worker`, and prints the URL when it's ready.
+
+To put your data on a TrueNAS dataset instead of inside a Docker named volume (recommended — gets you snapshots and clean backups), pass `RADIO_DATA_DIR`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/JimmyeJones/Radio-Resource-Site/claude/radio-content-web-app-7tby62/install.sh \
+  | RADIO_DATA_DIR=/mnt/tank/radio bash
+```
+
+All knobs:
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `RADIO_INSTALL_DIR` | `$HOME/radio-resource-site` | Where the repo is cloned. |
+| `RADIO_DATA_DIR` | _unset_ | Host path for SQLite DB + downloaded media. When set, the installer writes a `docker-compose.override.yml` with bind mounts; when unset, Docker named volumes are used. |
+| `RADIO_PORT` | `3000` | Host port to expose the web UI on. |
+| `RADIO_BRANCH` | `claude/radio-content-web-app-7tby62` | Git branch to track. |
+
+Re-run the same one-liner anytime to pull updates and rebuild — the script is idempotent.
+
+## Deployment on TrueNAS SCALE (manual)
 
 1. Clone or copy this repository into a dataset on your NAS (e.g. `/mnt/tank/apps/radio-resource-site`).
 2. Adjust `docker-compose.yml` if you want bind mounts to specific datasets instead of named volumes — for example:

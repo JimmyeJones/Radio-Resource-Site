@@ -1,8 +1,10 @@
 node_modules
 .next
 dist
-data
-media
+# Anchor to the context root so runtime volumes are excluded but bundled
+# source data (src/data/exam/*.json) still ships in the image.
+/data
+/media
 .git
 .gitignore
 *.md

@@ -1,17 +1,25 @@
 FROM node:20-slim AS builder
 WORKDIR /app
-RUN corepack enable
 
-# Build deps for better-sqlite3
+# Build deps for better-sqlite3's native addon
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
+
+# Pin pnpm to a version compatible with Node 20 (pnpm 11+ requires Node 22).
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile || pnpm install
 
 COPY . .
-RUN pnpm build && pnpm exec tsc -p tsconfig.worker.json
+# Build the Next app and compile the worker (tsc + tsc-alias to resolve @/ paths).
+RUN pnpm build && pnpm build:worker
+
+# Strip devDependencies so the runtime node_modules is prod-only. This keeps the
+# pnpm symlink layout (node_modules/.pnpm/...) intact, so copying the whole
+# directory below preserves every transitive dependency for both processes.
+RUN pnpm prune --prod
 
 FROM node:20-slim AS runner
 WORKDIR /app
@@ -21,25 +29,19 @@ ENV MEDIA_DIR=/media
 ENV PORT=3000
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    yt-dlp ffmpeg ca-certificates python3 \
+    yt-dlp ffmpeg ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Next standalone output
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# One complete prod node_modules (with the .pnpm store) serves both the web
+# server (next start) and the worker (node dist/worker/index.js).
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-# Worker output (compiled CommonJS) + its node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
-COPY --from=builder /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
-COPY --from=builder /app/node_modules/jsdom ./node_modules/jsdom
-COPY --from=builder /app/node_modules/@mozilla/readability ./node_modules/@mozilla/readability
-COPY --from=builder /app/node_modules/dompurify ./node_modules/dompurify
-COPY --from=builder /app/node_modules/satellite.js ./node_modules/satellite.js
-COPY --from=builder /app/node_modules/node-cron ./node_modules/node-cron
-COPY --from=builder /app/node_modules/zod ./node_modules/zod
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
 
 RUN mkdir -p /data /media
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node_modules/.bin/next", "start"]
