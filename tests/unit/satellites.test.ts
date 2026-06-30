@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { gridToLatLon, latLonToGrid } from '@/lib/tools/satellites';
-import { predictPasses } from '@/server/satellites/passes';
+import { predictPasses, buildIcs, type SatPass } from '@/server/satellites/passes';
 import { parseTleBlock } from '@/server/satellites/parse';
 
 describe('Maidenhead grid conversion', () => {
@@ -43,5 +43,35 @@ describe('pass prediction', () => {
     };
     const result = predictPasses(tle, { lat: 40, lon: -74 }, 24, new Date('2024-01-10T00:00:00Z'));
     expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe('ICS export', () => {
+  const basePass: SatPass = {
+    satellite: 'ISS (ZARYA)',
+    norad: 25544,
+    aos: 1704844800, // 2024-01-10T00:00:00Z
+    los: 1704845400,
+    maxElevationDeg: 42.4,
+    maxElevationAt: 1704845100,
+    durationS: 600,
+    startAzimuthDeg: 10,
+    endAzimuthDeg: 200,
+  };
+
+  it('produces a well-formed VCALENDAR with CRLF line endings', () => {
+    const ics = buildIcs([basePass]);
+    expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
+    expect(ics.includes('\r\nEND:VCALENDAR')).toBe(true);
+    expect(ics).toContain('BEGIN:VEVENT');
+    expect(ics).toContain('UID:25544-1704844800@radio-resource');
+    expect(ics).toContain('DTSTART:20240110T000000Z');
+  });
+
+  it('escapes commas, semicolons and backslashes in TEXT values (RFC 5545)', () => {
+    const ics = buildIcs([{ ...basePass, satellite: 'FOO-1, BAR; v\\2' }]);
+    expect(ics).toContain('SUMMARY:FOO-1\\, BAR\\; v\\\\2 pass');
+    // The raw, unescaped form must not leak into the output.
+    expect(ics).not.toContain('SUMMARY:FOO-1, BAR; v\\2');
   });
 });

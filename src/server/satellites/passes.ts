@@ -116,13 +116,23 @@ export function buildIcs(passes: SatPass[]): string {
       `DTSTAMP:${ics(p.aos)}`,
       `DTSTART:${ics(p.aos)}`,
       `DTEND:${ics(p.los)}`,
-      `SUMMARY:${p.satellite} pass · max ${p.maxElevationDeg.toFixed(0)}°`,
-      `DESCRIPTION:AOS ${azimuthCompass(p.startAzimuthDeg)} · LOS ${azimuthCompass(p.endAzimuthDeg)} · ${p.durationS}s`,
+      `SUMMARY:${escapeIcsText(`${p.satellite} pass · max ${p.maxElevationDeg.toFixed(0)}°`)}`,
+      `DESCRIPTION:${escapeIcsText(`AOS ${azimuthCompass(p.startAzimuthDeg)} · LOS ${azimuthCompass(p.endAzimuthDeg)} · ${p.durationS}s`)}`,
       'END:VEVENT',
     );
   }
   lines.push('END:VCALENDAR');
   return lines.join('\r\n');
+}
+
+// Escape a string for use as an iCalendar TEXT value (RFC 5545 §3.3.11):
+// backslash, comma, and semicolon are escaped; newlines become "\n".
+function escapeIcsText(text: string): string {
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r\n|\r|\n/g, '\\n');
 }
 
 function ics(unix: number): string {
